@@ -1,0 +1,34 @@
+# Ignorar arquivos de configuração específicos do ambiente
+**/config/development/*
+**/config/testing/*
+**/config/staging/*
+**/config/production/*
+
+# Ignorar logs
+**/logs/*
+!**/logs/index.html
+
+# Ignorar caches
+**/writable/cache/*
+!**/writable/cache/index.html
+!**/writable/cache/.htaccess
+
+# Ignorar uploads
+**/writable/uploads/*
+!**/writable/uploads/index.html
+
+# Ignorar arquivos temporários
+**/writable/tmp/*
+!**/writable/tmp/index.html
+
+# Ignorar arquivos de build do usuário
+user_guide_src/build/*
+user_guide_src/cilexer/build/*
+user_guide_src/cilexer/dist/*
+user_guide_src/cilexer/pycilexer.egg-info/*
+
+# Ignorar dependências do Composer
+/vendor/*
+
+# Ignorar a pasta .vscode
+.vscode/

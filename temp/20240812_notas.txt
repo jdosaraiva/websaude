@@ -1,0 +1,2106 @@
+Bom dia.
+Tenho um aplicação implementada com codeigniter 4.
+A aplicação é um aplicação para uso em consultórios médicos elaborada como um workflow onde cada form é uma etapa.
+
+**Divisão do Formulário em Etapas**:
+   - **Dados Pessoais**: Nome, data de nascimento.
+   - **Histórico Médico**: Condições, alergias, medicações, cirurgias, histórico familiar.
+   - **Sintomas Atuais**: Sintomas, duração dos sintomas, intensidade dos sintomas, fatores.
+   - **Exames e Diagnósticos**: Exames, resultados, diagnósticos.
+   - **Estilo de Vida**: Hábitos alimentares, atividade física, consumo de álcool e tabaco.
+   - **Notas e Plano de Tratamento**: Notas, plano de tratamento, próximas consultas, consentimento.
+
+Olhe meu modelo :
+
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class PacienteModel extends Model
+{
+    protected $table = 'pacientes';
+    protected $allowedFields = [
+        'nome', 
+		'data_nascimento', 
+		'condicoes', 
+		'alergias'		, 
+		'medicacoes', 
+		'cirurgias', 
+		'historico_familiar', 
+		'sintomas', 
+		'duracao_sintomas', 
+		'intensidade_sintomas', 
+		'fatores', 
+		'exames', 
+		'resultados', 
+		'diagnosticos', 
+		'habitos_alimentares', 
+		'atividade_fisica', 
+		'alcool', 
+		'tabaco', 
+		'notas', 
+		'plano_tratamento', 
+		'proximas_consultas', 
+		'consentimento'
+    ];
+}
+
+Bom dia! Sua aplicação parece muito bem estruturada e útil para consultórios médicos. O modelo que você compartilhou está bem organizado e cobre todas as etapas do workflow que você mencionou.
+
+Se precisar de ajuda com algo específico, como validação de dados, integração com banco de dados, ou qualquer outra coisa, estou aqui para ajudar! Há algo específico que você gostaria de ajustar ou melhorar na sua aplicação?
+
+----- 
+
+Agora olhe meu controller:
+
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function sintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/sintomas_atuais', $data);
+    }
+
+    public function salvarSintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/historico_medico/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+    }
+
+
+    public function examesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/exames_diagnosticos', $data);
+    }
+
+    public function salvarExamesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/estilo_vida/' . $id));
+    }
+
+    public function estiloVida($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/estilo_vida', $data);
+    }
+
+    public function salvarEstiloVida($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/notas_plano_tratamento/' . $id));
+    }
+
+    public function notasPlanoTratamento($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/notas_plano_tratamento', $data);
+    }
+
+    public function salvarNotasPlanoTratamento($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/estilo_vida/' . $id));
+        }
+
+        // Redirecionar para a próxima etapa ou página final
+        return redirect()->to(site_url('formulario/confirmacao/' . $id));
+    }
+
+    public function confirmacao($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/confirmacao', $data);
+    }
+
+    public function finalizar($id)
+    {
+        // Aqui você pode adicionar lógica para finalizar o processo, como enviar um e-mail de confirmação, gerar um relatório, etc.
+        return redirect()->to(site_url('formulario/sucesso'));
+    }
+
+    public function sucesso()
+    {
+        return view('formulario/sucesso');
+    }
+
+    public function listarPacientes()
+    {
+        $model = new PacienteModel();
+        $data['pacientes'] = $model->findAll();
+
+        return view('formulario/listar_pacientes', $data);
+    }
+}
+
+e minhas rotas:
+
+<?php
+
+use CodeIgniter\Router\RouteCollection;
+
+/**
+ * @var RouteCollection $routes
+ */
+
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais', 'FormularioController::index/$1');
+$routes->get('/formulario/informacoes_pessoais/(:num)', 'FormularioController::index/$1');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+$routes->get('/formulario/salvarEVoltar/(:num)', 'FormularioController::salvarEVoltar/$1');
+$routes->get('/formulario/sintomas_atuais/(:num)', 'FormularioController::sintomasAtuais/$1');
+$routes->post('/formulario/salvarSintomasAtuais/(:num)', 'FormularioController::salvarSintomasAtuais/$1');
+$routes->get('/formulario/exames_diagnosticos/(:num)', 'FormularioController::examesDiagnosticos/$1');
+$routes->post('/formulario/salvarExamesDiagnosticos/(:num)', 'FormularioController::salvarExamesDiagnosticos/$1');
+$routes->get('/formulario/notas_plano_tratamento/(:num)', 'FormularioController::notasPlanoTratamento/$1');
+$routes->post('/formulario/salvarNotasPlanoTratamento/(:num)', 'FormularioController::salvarNotasPlanoTratamento/$1');
+$routes->get('/formulario/confirmacao/(:num)', 'FormularioController::confirmacao/$1');
+$routes->get('/formulario/estilo_vida/(:num)', 'FormularioController::estiloVida/$1');
+$routes->post('/formulario/salvarEstiloVida/(:num)', 'FormularioController::salvarEstiloVida/$1');
+$routes->get('/formulario/finalizar/(:num)', 'FormularioController::finalizar/$1');
+$routes->get('/formulario/sucesso', 'FormularioController::sucesso');
+$routes->get('/formulario/listar_pacientes', 'FormularioController::listarPacientes');
+$routes->get('gemini/generate', 'GeminiController::generateText');
+
+
+Seu controlador e suas rotas estão bem organizados e seguem uma estrutura lógica para o fluxo do formulário. Aqui estão algumas sugestões e observações que podem ajudar a melhorar ou otimizar seu código:
+
+1. **Validação de Dados**:
+   - Adicione validação de dados nos métodos `salvar` para garantir que os dados inseridos pelos usuários sejam válidos antes de salvar no banco de dados. Você pode usar as regras de validação do CodeIgniter.
+
+2. **Mensagens de Sucesso e Erro**:
+   - Considere adicionar mensagens de sucesso e erro para informar os usuários sobre o status das operações (por exemplo, dados salvos com sucesso, erro ao salvar dados).
+
+3. **Segurança**:
+   - Certifique-se de que os dados recebidos do formulário sejam devidamente sanitizados para evitar ataques de injeção SQL e outros tipos de vulnerabilidades.
+
+4. **Reutilização de Código**:
+   - Para evitar repetição de código, você pode criar métodos privados para carregar dados do paciente e salvar dados, e chamá-los nos métodos públicos.
+
+Aqui está um exemplo de como você pode adicionar validação de dados e mensagens de sucesso/erro:
+
+```php
+public function salvarInformacoesPessoais()
+{
+    $model = new PacienteModel();
+    $data = $this->request->getPost();
+
+    // Validação de dados
+    if (!$this->validate([
+        'nome' => 'required|min_length[3]',
+        'data_nascimento' => 'required|valid_date',
+        // Adicione outras regras de validação conforme necessário
+    ])) {
+        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+    }
+
+    if (isset($data['id']) && !empty($data['id'])) {
+        $model->save($data);
+        $id = $data['id'];
+    } else {
+        $model->save($data);
+        $id = $model->insertID();
+    }
+
+    return redirect()->to(site_url('formulario/historico_medico/' . $id))->with('success', 'Informações pessoais salvas com sucesso!');
+}
+```
+
+E no seu arquivo de visualização, você pode exibir as mensagens de sucesso e erro:
+
+```php
+<?php if (session()->has('success')): ?>
+    <div class="alert alert-success">
+        <?= session('success') ?>
+    </div>
+<?php endif; ?>
+
+<?php if (session()->has('errors')): ?>
+    <div class="alert alert-danger">
+        <?php foreach (session('errors') as $error): ?>
+            <p><?= $error ?></p>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+```
+
+Essas são apenas algumas sugestões para melhorar a experiência do usuário e a segurança da sua aplicação. Se precisar de mais ajuda ou tiver outras dúvidas, estou à disposição!
+
+----- 
+
+Sabendo disso vamos fazer o seguinte.
+Ajude-me. Crie um pessoa ficticia para que eu preecha os formulários.
+A pessoa deve ter entre 35 e 40 anos de idade, sexo, feminino, deve ter pequenos desvios de conduta alimentar e sintomas que indiquem alguma coisa.
+Olhe as informações que passei e me forneça todos os dados pra eu fazer um cadastro.
+
+Claro! Vamos criar um perfil fictício para preencher os formulários. Aqui estão os dados:
+
+### Dados Pessoais
+- **Nome**: João Silva
+- **Data de Nascimento**: 15/08/1985 (38 anos)
+
+### Histórico Médico
+- **Condições**: Hipertensão leve
+- **Alergias**: Nenhuma conhecida
+- **Medicações**: Losartana 50mg (uma vez ao dia)
+- **Cirurgias**: Apendicectomia (2010)
+- **Histórico Familiar**: Pai com diabetes tipo 2, mãe com hipertensão
+
+### Sintomas Atuais
+- **Sintomas**: Fadiga, dor de cabeça, ganho de peso
+- **Duração dos Sintomas**: 3 meses
+- **Intensidade dos Sintomas**: Moderada
+- **Fatores**: Estresse no trabalho, má alimentação
+
+### Exames e Diagnósticos
+- **Exames**: Hemograma completo, glicemia de jejum, perfil lipídico
+- **Resultados**: Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado
+- **Diagnósticos**: Pré-diabetes, dislipidemia
+
+### Estilo de Vida
+- **Hábitos Alimentares**: Consumo frequente de fast food, baixo consumo de frutas e vegetais
+- **Atividade Física**: Sedentário, raramente pratica exercícios
+- **Consumo de Álcool**: Socialmente, cerca de 2-3 vezes por semana
+- **Consumo de Tabaco**: Não fuma
+
+### Notas e Plano de Tratamento
+- **Notas**: Paciente precisa melhorar hábitos alimentares e aumentar atividade física
+- **Plano de Tratamento**: Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista
+- **Próximas Consultas**: Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês
+- **Consentimento**: Consentimento dado para tratamento e compartilhamento de informações médicas
+
+Com esses dados, você pode preencher os formulários da sua aplicação. Se precisar de mais alguma coisa ou tiver dúvidas, estou aqui para ajudar!
+
+
+----- 
+Agora, você é um médico cliníco geral.
+Como eu posso escrever um prompt com todas essas informações para a sua avaliação.
+Imagine que estou estraindo essas informações da minha base e vou submetê-las a você.
+Como devo escrever o prompt para que eu tenha sua melhor avaliação médica para o paciente.
+Entenda, nesse momento eu só quero o melhor prompt para entrada de dados , não quero uma avaliação do paciente ainda.
+
+Entendi! Aqui está um exemplo de como você pode estruturar o prompt para enviar todas as informações do paciente para avaliação médica:
+
+---
+
+**Paciente: João Silva**
+
+**Dados Pessoais:**
+- Nome: João Silva
+- Data de Nascimento: 15/08/1985 (38 anos)
+- Sexo: Masculino
+
+**Histórico Médico:**
+- Condições: Hipertensão leve
+- Alergias: Nenhuma conhecida
+- Medicações: Losartana 50mg (uma vez ao dia)
+- Cirurgias: Apendicectomia (2010)
+- Histórico Familiar: Pai com diabetes tipo 2, mãe com hipertensão
+
+**Sintomas Atuais:**
+- Sintomas: Fadiga, dor de cabeça, ganho de peso
+- Duração dos Sintomas: 3 meses
+- Intensidade dos Sintomas: Moderada
+- Fatores: Estresse no trabalho, má alimentação
+
+**Exames e Diagnósticos:**
+- Exames: Hemograma completo, glicemia de jejum, perfil lipídico
+- Resultados: Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado
+- Diagnósticos: Pré-diabetes, dislipidemia
+
+**Estilo de Vida:**
+- Hábitos Alimentares: Consumo frequente de fast food, baixo consumo de frutas e vegetais
+- Atividade Física: Sedentário, raramente pratica exercícios
+- Consumo de Álcool: Socialmente, cerca de 2-3 vezes por semana
+- Consumo de Tabaco: Não fuma
+
+**Notas e Plano de Tratamento:**
+- Notas: Paciente precisa melhorar hábitos alimentares e aumentar atividade física
+- Plano de Tratamento: Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista
+- Próximas Consultas: Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês
+- Consentimento: Consentimento dado para tratamento e compartilhamento de informações médicas
+
+---
+
+Você pode usar essa estrutura para enviar os dados do paciente de forma clara e organizada, facilitando a avaliação médica. Se precisar de mais alguma coisa, estou aqui para ajudar!
+
+
+----- 
+
+Você é um médico clínico geral.
+Avalie o paciente abaixo cujas informações passarei a seguir.
+Faça sugestões de exames, tratamentos e medicamentos.
+
+**Paciente: João Silva**
+
+**Dados Pessoais:**
+- Nome: João Silva
+- Data de Nascimento: 15/08/1985 (38 anos)
+- Sexo: Masculino
+
+**Histórico Médico:**
+- Condições: Hipertensão leve
+- Alergias: Nenhuma conhecida
+- Medicações: Losartana 50mg (uma vez ao dia)
+- Cirurgias: Apendicectomia (2010)
+- Histórico Familiar: Pai com diabetes tipo 2, mãe com hipertensão
+
+**Sintomas Atuais:**
+- Sintomas: Fadiga, dor de cabeça, ganho de peso
+- Duração dos Sintomas: 3 meses
+- Intensidade dos Sintomas: Moderada
+- Fatores: Estresse no trabalho, má alimentação
+
+**Exames e Diagnósticos:**
+- Exames: Hemograma completo, glicemia de jejum, perfil lipídico
+- Resultados: Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado
+- Diagnósticos: Pré-diabetes, dislipidemia
+
+**Estilo de Vida:**
+- Hábitos Alimentares: Consumo frequente de fast food, baixo consumo de frutas e vegetais
+- Atividade Física: Sedentário, raramente pratica exercícios
+- Consumo de Álcool: Socialmente, cerca de 2-3 vezes por semana
+- Consumo de Tabaco: Não fuma
+
+**Notas e Plano de Tratamento:**
+- Notas: Paciente precisa melhorar hábitos alimentares e aumentar atividade física
+- Plano de Tratamento: Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista
+- Próximas Consultas: Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês
+- Consentimento: Consentimento dado para tratamento e compartilhamento de informações médicas
+
+
+**Avaliação Médica para o Paciente João Silva**
+
+**Histórico e Sintomas:**
+- **Paciente**: João Silva, 38 anos, masculino
+- **Condições**: Hipertensão leve
+- **Sintomas Atuais**: Fadiga, dor de cabeça, ganho de peso (duração de 3 meses, intensidade moderada)
+- **Histórico Familiar**: Pai com diabetes tipo 2, mãe com hipertensão
+
+**Exames Realizados:**
+- **Hemograma completo**: Normal
+- **Glicemia de jejum**: 110 mg/dL (pré-diabetes)
+- **Perfil lipídico**: Colesterol LDL elevado
+
+**Estilo de Vida:**
+- **Hábitos Alimentares**: Consumo frequente de fast food, baixo consumo de frutas e vegetais
+- **Atividade Física**: Sedentário
+- **Consumo de Álcool**: Socialmente, 2-3 vezes por semana
+- **Consumo de Tabaco**: Não fuma
+
+**Plano de Tratamento Atual:**
+- **Medicação**: Losartana 50mg (uma vez ao dia)
+- **Notas**: Necessidade de melhorar hábitos alimentares e aumentar atividade física
+- **Plano de Tratamento**: Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista
+- **Próximas Consultas**: Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês
+
+**Sugestões de Exames Adicionais:**
+1. **Hemoglobina Glicada (HbA1c)**: Para avaliar o controle glicêmico a longo prazo.
+2. **Teste de Tolerância à Glicose Oral (OGTT)**: Para confirmar o diagnóstico de pré-diabetes.
+3. **Eletrocardiograma (ECG)**: Para avaliar a função cardíaca, especialmente devido à hipertensão e sintomas de fadiga.
+4. **Função Renal (creatinina, ureia)**: Para monitorar possíveis efeitos da hipertensão nos rins.
+5. **Função Hepática (TGO, TGP)**: Para avaliar a saúde do fígado, especialmente considerando o consumo de álcool.
+
+**Sugestões de Tratamento e Medicamentos:**
+1. **Ajuste na Medicação para Hipertensão**: Considerar a adição de um diurético tiazídico se a pressão arterial não estiver bem controlada com a Losartana.
+2. **Metformina**: Pode ser considerada para o manejo da pré-diabetes, especialmente se as mudanças no estilo de vida não forem suficientes.
+3. **Estatinas**: Para o controle do colesterol LDL elevado, como atorvastatina ou rosuvastatina.
+4. **Suplementos**: Considerar a suplementação de ômega-3 para ajudar no controle dos lipídios.
+
+**Recomendações de Estilo de Vida:**
+1. **Dieta**: Acompanhamento com nutricionista para desenvolver um plano alimentar balanceado, rico em frutas, vegetais, grãos integrais e proteínas magras.
+2. **Atividade Física**: Iniciar com caminhadas diárias de 30 minutos, progredindo para exercícios mais intensos conforme tolerado.
+3. **Redução do Consumo de Álcool**: Limitar o consumo de álcool a no máximo 1-2 vezes por semana.
+4. **Gerenciamento do Estresse**: Técnicas de relaxamento, como meditação, yoga ou terapia cognitivo-comportamental.
+
+**Próximas Consultas:**
+- **Nutricionista**: Em 2 semanas para avaliação e ajuste do plano alimentar.
+- **Retorno ao Médico**: Em 1 mês para reavaliação dos sintomas e ajuste do tratamento conforme necessário.
+
+Essas são as sugestões baseadas nas informações fornecidas. Se precisar de mais alguma coisa, estou à disposição!
+
+----- 
+Eu consigo submeter consultas para o Copilot via api?
+Mostre-me um exemplo usando o codeigniter 4.
+Ajude-me?
+
+Sim, você pode submeter consultas para o Copilot via API. Vou te mostrar um exemplo de como fazer isso usando CodeIgniter 4. Vamos criar um controlador que envia uma solicitação para a API do Copilot e processa a resposta.
+
+### Passo 1: Configuração do Cliente HTTP
+
+Primeiro, certifique-se de que você tem o cliente HTTP habilitado no CodeIgniter 4. Você pode instalar o GuzzleHTTP, que é uma biblioteca popular para fazer solicitações HTTP.
+
+Adicione o GuzzleHTTP ao seu projeto usando o Composer:
+
+```bash
+composer require guzzlehttp/guzzle
+```
+
+### Passo 2: Criar o Controlador
+
+Crie um controlador chamado `CopilotController` para gerenciar as solicitações para a API do Copilot.
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\Controller;
+use GuzzleHttp\Client;
+
+class CopilotController extends Controller
+{
+    public function enviarConsulta()
+    {
+        // Dados do paciente
+        $dadosPaciente = [
+            'nome' => 'João Silva',
+            'data_nascimento' => '1985-08-15',
+            'sexo' => 'Masculino',
+            'historico_medico' => [
+                'condicoes' => 'Hipertensão leve',
+                'alergias' => 'Nenhuma conhecida',
+                'medicacoes' => 'Losartana 50mg (uma vez ao dia)',
+                'cirurgias' => 'Apendicectomia (2010)',
+                'historico_familiar' => 'Pai com diabetes tipo 2, mãe com hipertensão'
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => 'Fadiga, dor de cabeça, ganho de peso',
+                'duracao_sintomas' => '3 meses',
+                'intensidade_sintomas' => 'Moderada',
+                'fatores' => 'Estresse no trabalho, má alimentação'
+            ],
+            'exames_diagnosticos' => [
+                'exames' => 'Hemograma completo, glicemia de jejum, perfil lipídico',
+                'resultados' => 'Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado',
+                'diagnosticos' => 'Pré-diabetes, dislipidemia'
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => 'Consumo frequente de fast food, baixo consumo de frutas e vegetais',
+                'atividade_fisica' => 'Sedentário',
+                'alcool' => 'Socialmente, cerca de 2-3 vezes por semana',
+                'tabaco' => 'Não fuma'
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => 'Paciente precisa melhorar hábitos alimentares e aumentar atividade física',
+                'plano_tratamento' => 'Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista',
+                'proximas_consultas' => 'Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês',
+                'consentimento' => 'Consentimento dado para tratamento e compartilhamento de informações médicas'
+            ]
+        ];
+
+        // Configuração do cliente HTTP
+        $client = new Client();
+
+        // Enviar solicitação para a API do Copilot
+        $response = $client->post('https://api.copilot.microsoft.com/consulta', [
+            'json' => $dadosPaciente,
+            'headers' => [
+                'Authorization' => 'Bearer SEU_TOKEN_DE_AUTENTICACAO',
+                'Content-Type' => 'application/json'
+            ]
+        ]);
+
+        // Processar a resposta
+        $resultado = json_decode($response->getBody(), true);
+
+        // Exibir o resultado
+        return view('resultado_consulta', ['resultado' => $resultado]);
+    }
+}
+```
+
+### Passo 3: Configurar a Rota
+
+Adicione uma rota para o controlador no arquivo `app/Config/Routes.php`:
+
+```php
+$routes->get('/copilot/enviarConsulta', 'CopilotController::enviarConsulta');
+```
+
+### Passo 4: Criar a Visualização
+
+Crie uma visualização chamada `resultado_consulta.php` em `app/Views` para exibir o resultado da consulta:
+
+```php
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultado da Consulta</title>
+</head>
+<body>
+    <h1>Resultado da Consulta</h1>
+    <pre><?php print_r($resultado); ?></pre>
+</body>
+</html>
+```
+
+### Passo 5: Testar a Aplicação
+
+Agora, você pode acessar a rota `/copilot/enviarConsulta` no seu navegador para enviar a consulta para a API do Copilot e ver o resultado.
+
+Certifique-se de substituir `SEU_TOKEN_DE_AUTENTICACAO` pelo token de autenticação real fornecido pela API do Copilot.
+
+Se precisar de mais alguma coisa ou tiver dúvidas, estou aqui para ajudar!
+
+----- 
+
+Muito bom, mas vamos pegar esses dados usando meu Modelo de Paciente o PacientModel.
+Eu passaria o id do paciente. Como ficaria?
+Pode me ajudar?
+
+Claro! Vamos ajustar o controlador para buscar os dados do paciente usando o `PacienteModel` com base no ID fornecido. Aqui está como você pode fazer isso:
+
+### Passo 1: Ajustar o Controlador
+
+Vamos modificar o controlador `CopilotController` para buscar os dados do paciente pelo ID e enviar esses dados para a API do Copilot.
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+use CodeIgniter\Controller;
+use GuzzleHttp\Client;
+
+class CopilotController extends Controller
+{
+    public function enviarConsulta($id)
+    {
+        // Instanciar o modelo de Paciente
+        $model = new PacienteModel();
+        
+        // Buscar os dados do paciente pelo ID
+        $paciente = $model->find($id);
+
+        if (!$paciente) {
+            return redirect()->back()->with('error', 'Paciente não encontrado.');
+        }
+
+        // Preparar os dados do paciente para a API
+        $dadosPaciente = [
+            'nome' => $paciente['nome'],
+            'data_nascimento' => $paciente['data_nascimento'],
+            'sexo' => 'Masculino', // Supondo que o sexo seja masculino, ajuste conforme necessário
+            'historico_medico' => [
+                'condicoes' => $paciente['condicoes'],
+                'alergias' => $paciente['alergias'],
+                'medicacoes' => $paciente['medicacoes'],
+                'cirurgias' => $paciente['cirurgias'],
+                'historico_familiar' => $paciente['historico_familiar']
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => $paciente['sintomas'],
+                'duracao_sintomas' => $paciente['duracao_sintomas'],
+                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
+                'fatores' => $paciente['fatores']
+            ],
+            'exames_diagnosticos' => [
+                'exames' => $paciente['exames'],
+                'resultados' => $paciente['resultados'],
+                'diagnosticos' => $paciente['diagnosticos']
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => $paciente['habitos_alimentares'],
+                'atividade_fisica' => $paciente['atividade_fisica'],
+                'alcool' => $paciente['alcool'],
+                'tabaco' => $paciente['tabaco']
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => $paciente['notas'],
+                'plano_tratamento' => $paciente['plano_tratamento'],
+                'proximas_consultas' => $paciente['proximas_consultas'],
+                'consentimento' => $paciente['consentimento']
+            ]
+        ];
+
+        // Configuração do cliente HTTP
+        $client = new Client();
+
+        // Enviar solicitação para a API do Copilot
+        $response = $client->post('https://api.copilot.microsoft.com/consulta', [
+            'json' => $dadosPaciente,
+            'headers' => [
+                'Authorization' => 'Bearer SEU_TOKEN_DE_AUTENTICACAO',
+                'Content-Type' => 'application/json'
+            ]
+        ]);
+
+        // Processar a resposta
+        $resultado = json_decode($response->getBody(), true);
+
+        // Exibir o resultado
+        return view('resultado_consulta', ['resultado' => $resultado]);
+    }
+}
+```
+
+### Passo 2: Ajustar a Rota
+
+Adicione uma rota para o controlador no arquivo `app/Config/Routes.php`:
+
+```php
+$routes->get('/copilot/enviarConsulta/(:num)', 'CopilotController::enviarConsulta/$1');
+```
+
+### Passo 3: Criar a Visualização
+
+Certifique-se de que a visualização `resultado_consulta.php` está configurada para exibir o resultado da consulta:
+
+```php
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultado da Consulta</title>
+</head>
+<body>
+    <h1>Resultado da Consulta</h1>
+    <pre><?php print_r($resultado); ?></pre>
+</body>
+</html>
+```
+
+### Passo 4: Testar a Aplicação
+
+Agora, você pode acessar a rota `/copilot/enviarConsulta/{id}` no seu navegador, substituindo `{id}` pelo ID do paciente que deseja consultar. Isso enviará os dados do paciente para a API do Copilot e exibirá o resultado.
+
+Se precisar de mais alguma coisa ou tiver dúvidas, estou à disposição!
+
+----- 
+Como eu obtenho o SEU_TOKEN_DE_AUTENTICACAO?
+Mostre-me as urls para maiores informações.
+
+Para obter o token de autenticação para a API do Microsoft Copilot, você precisará seguir alguns passos específicos. Aqui estão os passos gerais e algumas URLs úteis para mais informações:
+
+### Passos para Obter o Token de Autenticação
+
+1. **Registrar-se no Portal do Azure**:
+   - Acesse o [Portal do Azure](https://portal.azure.com/) e crie uma conta se ainda não tiver uma.
+
+2. **Registrar um Aplicativo**:
+   - No Portal do Azure, vá para "Azure Active Directory" > "Registros de Aplicativos" e registre um novo aplicativo. Isso fornecerá um `Client ID` e um `Client Secret`.
+
+3. **Configurar Permissões**:
+   - Configure as permissões necessárias para o aplicativo acessar a API do Copilot. Isso pode incluir permissões de leitura e escrita conforme necessário.
+
+4. **Obter o Token de Autenticação**:
+   - Use o `Client ID`, `Client Secret`, e outras credenciais para obter um token de autenticação. Você pode fazer isso usando uma solicitação HTTP para o endpoint de token do Azure AD.
+
+### URLs Úteis
+
+- [API plugins in Microsoft Copilot for Security](https://learn.microsoft.com/en-us/copilot/security/plugin-api) - Este artigo fornece informações sobre como configurar plugins de API no Microsoft Copilot, incluindo detalhes sobre autenticação.
+- [API plugins for Microsoft Copilot for Microsoft 365](https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-api-plugins) - Este artigo explica como criar e configurar plugins de API para o Microsoft Copilot no Microsoft 365.
+- [Autenticação para Copilot for Service](https://learn.microsoft.com/en-us/microsoft-copilot-service/copilot-authentication-options) - Este artigo detalha as opções de autenticação para o Copilot for Service.
+
+Esses recursos devem ajudá-lo a configurar e obter o token de autenticação necessário para usar a API do Microsoft Copilot. Se precisar de mais alguma coisa, estou à disposição!
+
+Fonte: conversa com o Copilot, 12/08/2024
+(1) OpenCopilot: FREE Opensource AI Copilot Executing APIs (Installation Tutorial). https://www.youtube.com/watch?v=HiXh3pVp9Is.
+(2) Get Started with Microsoft Copilot Studio: How to Create Your First Copilot. https://www.youtube.com/watch?v=frIA3Wof08Y.
+(3) Get Started with Microsoft Copilot (Beginners Guide). https://www.youtube.com/watch?v=g5pY1Tb_r4g.
+(4) API plugins in Microsoft Copilot for Security | Microsoft Learn. https://learn.microsoft.com/en-us/copilot/security/plugin-api.
+(5) API plugins for Microsoft Copilot for Microsoft 365. https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-api-plugins.
+(6) Microsoft Copilot Studio: Authenticating and Retrieving Access for HTTP .... https://devcodef1.com/news/1224006/authenticating-http-requests-in-microsoft-copilot-studio.
+(7) Authentication for Copilot for Service - Copilot for Service. https://learn.microsoft.com/en-us/microsoft-copilot-service/copilot-authentication-options.
+(8) undefined. https://hacktrack.routum.io/.well-known/ai-plugin.json.
+
+chave de api do gemini
+
+AIzaSyDHtaSPxPCeAqr_CvjKrfLc3cP4IQ0CboI
+
+
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use GuzzleHttp\Client;
+
+class GeminiController extends ResourceController
+{
+    protected $apiKey = 'YOUR_API_KEY'; // Substitua pela sua chave de API
+
+    public function generateText()
+    {
+        $model = 'gemini-1.5-flash'; // Modelo do Gemini a ser utilizado
+        $prompt = 'Avalie o paciente que Escreva um poema sobre a natureza.';
+
+        $dadosPaciente = [
+            'nome' => $paciente['nome'],
+            'data_nascimento' => $paciente['data_nascimento'],
+            'sexo' => 'Masculino', // Supondo que o sexo seja masculino, ajuste conforme necessário
+            'historico_medico' => [
+                'condicoes' => $paciente['condicoes'],
+                'alergias' => $paciente['alergias'],
+                'medicacoes' => $paciente['medicacoes'],
+                'cirurgias' => $paciente['cirurgias'],
+                'historico_familiar' => $paciente['historico_familiar']
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => $paciente['sintomas'],
+                'duracao_sintomas' => $paciente['duracao_sintomas'],
+                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
+                'fatores' => $paciente['fatores']
+            ],
+            'exames_diagnosticos' => [
+                'exames' => $paciente['exames'],
+                'resultados' => $paciente['resultados'],
+                'diagnosticos' => $paciente['diagnosticos']
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => $paciente['habitos_alimentares'],
+                'atividade_fisica' => $paciente['atividade_fisica'],
+                'alcool' => $paciente['alcool'],
+                'tabaco' => $paciente['tabaco']
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => $paciente['notas'],
+                'plano_tratamento' => $paciente['plano_tratamento'],
+                'proximas_consultas' => $paciente['proximas_consultas'],
+                'consentimento' => $paciente['consentimento']
+            ]
+        ];
+
+
+        $client = new Client();
+        $response = $client->request('POST', 'https://ai.google.dev/api/v1/generateText', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey
+            ],
+            'json' => [
+                'model' => $model,
+                'prompt' => $prompt
+            ]
+        ]);
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        return view('resultado', ['resultado' => $result['text']]);
+    }
+}
+
+
+----- 
+Eu adicionei o controller e a rota abaixo na minha aplicação.
+
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use GuzzleHttp\Client;
+use App\Models\PacienteModel;
+
+
+class GeminiController extends ResourceController
+{
+    protected $apiKey = 'AIzaSyDHtaSPxPCeAqr_CvjKrfLc3cP4IQ0CboI'; // Substitua pela sua chave de API
+
+    public function generateText($id)
+    {
+        $model = 'gemini-1.5-flash'; // Modelo do Gemini a ser utilizado
+        $prompt = 'Escreva um poema sobre a natureza.';
+
+        $dadosPaciente = $this->getPacienteJSON($id);
+
+        // Formatando o prompt para a Gemini API
+        $prompt = "Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
+
+        $client = new Client();
+        $response = $client->request('POST', 'https://ai.google.dev/api/v1/generateText', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->apiKey
+            ],
+            'json' => [
+                'model' => $model,
+                'prompt' => $prompt
+            ]
+        ]);
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        return view('resultado', ['resultado' => $result['text']]);
+    }
+
+    public function getPacienteJSON($id)
+    {
+        $pacienteModel = new PacienteModel();
+        $paciente = $pacienteModel->find($id);
+
+        $dadosPaciente = [
+            'nome' => $paciente['nome'],
+            'data_nascimento' => $paciente['data_nascimento'],
+            'sexo' => 'Masculino', // Supondo que o sexo seja masculino, ajuste conforme necessário
+            'historico_medico' => [
+                'condicoes' => $paciente['condicoes'],
+                'alergias' => $paciente['alergias'],
+                'medicacoes' => $paciente['medicacoes'],
+                'cirurgias' => $paciente['cirurgias'],
+                'historico_familiar' => $paciente['historico_familiar']
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => $paciente['sintomas'],
+                'duracao_sintomas' => $paciente['duracao_sintomas'],
+                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
+                'fatores' => $paciente['fatores']
+            ],
+            'exames_diagnosticos' => [
+                'exames' => $paciente['exames'],
+                'resultados' => $paciente['resultados'],
+                'diagnosticos' => $paciente['diagnosticos']
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => $paciente['habitos_alimentares'],
+                'atividade_fisica' => $paciente['atividade_fisica'],
+                'alcool' => $paciente['alcool'],
+                'tabaco' => $paciente['tabaco']
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => $paciente['notas'],
+                'plano_tratamento' => $paciente['plano_tratamento'],
+                'proximas_consultas' => $paciente['proximas_consultas'],
+                'consentimento' => $paciente['consentimento']
+            ]
+        ];
+
+        return json_encode($dadosPaciente);
+    }
+}
+
+
+Seu controlador `GeminiController` está bem estruturado e parece estar configurado corretamente para fazer chamadas à API do Gemini. Aqui estão algumas sugestões para garantir que tudo funcione conforme o esperado:
+
+1. **Segurança da Chave de API**:
+   - Evite expor sua chave de API diretamente no código. Em vez disso, armazene-a em um arquivo de configuração ou em variáveis de ambiente. Isso ajuda a proteger sua chave de API contra uso indevido.
+
+2. **Tratamento de Erros**:
+   - Adicione tratamento de erros para lidar com possíveis falhas na chamada à API. Isso pode incluir verificar o status da resposta e capturar exceções.
+
+3. **Validação de Dados**:
+   - Certifique-se de que os dados do paciente estão completos e válidos antes de enviar o prompt para a API do Gemini.
+
+Aqui está uma versão ajustada do seu controlador com essas melhorias:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use GuzzleHttp\Client;
+use App\Models\PacienteModel;
+
+class GeminiController extends ResourceController
+{
+    protected $apiKey;
+
+    public function __construct()
+    {
+        $this->apiKey = getenv('GEMINI_API_KEY'); // Carregar a chave de API de uma variável de ambiente
+    }
+
+    public function generateText($id)
+    {
+        $model = 'gemini-1.5-flash'; // Modelo do Gemini a ser utilizado
+        $dadosPaciente = $this->getPacienteJSON($id);
+
+        // Formatando o prompt para a Gemini API
+        $prompt = "Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
+
+        try {
+            $client = new Client();
+            $response = $client->request('POST', 'https://ai.google.dev/api/v1/generateText', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey
+                ],
+                'json' => [
+                    'model' => $model,
+                    'prompt' => $prompt
+                ]
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Erro na chamada à API do Gemini');
+            }
+
+            $result = json_decode($response->getBody()->getContents(), true);
+
+            return view('resultado', ['resultado' => $result['text']]);
+        } catch (\Exception $e) {
+            return view('erro', ['mensagem' => $e->getMessage()]);
+        }
+    }
+
+    public function getPacienteJSON($id)
+    {
+        $pacienteModel = new PacienteModel();
+        $paciente = $pacienteModel->find($id);
+
+        if (!$paciente) {
+            throw new \Exception('Paciente não encontrado');
+        }
+
+        $dadosPaciente = [
+            'nome' => $paciente['nome'],
+            'data_nascimento' => $paciente['data_nascimento'],
+            'sexo' => 'Masculino', // Supondo que o sexo seja masculino, ajuste conforme necessário
+            'historico_medico' => [
+                'condicoes' => $paciente['condicoes'],
+                'alergias' => $paciente['alergias'],
+                'medicacoes' => $paciente['medicacoes'],
+                'cirurgias' => $paciente['cirurgias'],
+                'historico_familiar' => $paciente['historico_familiar']
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => $paciente['sintomas'],
+                'duracao_sintomas' => $paciente['duracao_sintomas'],
+                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
+                'fatores' => $paciente['fatores']
+            ],
+            'exames_diagnosticos' => [
+                'exames' => $paciente['exames'],
+                'resultados' => $paciente['resultados'],
+                'diagnosticos' => $paciente['diagnosticos']
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => $paciente['habitos_alimentares'],
+                'atividade_fisica' => $paciente['atividade_fisica'],
+                'alcool' => $paciente['alcool'],
+                'tabaco' => $paciente['tabaco']
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => $paciente['notas'],
+                'plano_tratamento' => $paciente['plano_tratamento'],
+                'proximas_consultas' => $paciente['proximas_consultas'],
+                'consentimento' => $paciente['consentimento']
+            ]
+        ];
+
+        return $dadosPaciente;
+    }
+}
+```
+
+E aqui está a rota ajustada para o controlador:
+
+```php
+$routes->get('gemini/generate/(:num)', 'GeminiController::generateText/$1');
+```
+
+Essas mudanças devem ajudar a melhorar a segurança e a robustez da sua aplicação. Se precisar de mais alguma coisa, estou aqui para ajudar!
+
+----- 
+
+    public function generateText($id)
+    {
+        $model = 'gemini-1.5-flash'; // Modelo do Gemini a ser utilizado
+        $dadosPaciente = $this->getPacienteJSON($id);
+
+        // Formatando o prompt para a Gemini API
+        $prompt = "Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
+
+        try {
+            $client = new Client();
+            $response = $client->request('POST', 'https://ai.google.dev/api/v1/generateText', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey
+                ],
+                'json' => [
+                    'model' => $model,
+                    'prompt' => $prompt
+                ]
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Erro na chamada à API do Gemini');
+            }
+
+            $result = json_decode($response->getBody()->getContents(), true);
+
+            return view('resultado', ['resultado' => $result['text']]);
+        } catch (\Exception $e) {
+            return view('erro', ['mensagem' => $e->getMessage()]);
+        }
+    }
+
+No método acima eu estou caindo na exception. eu não tenho uma view erro.
+
+Olhe minhas views 
+view main
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/path/to/your/css/styles.css"> <!-- Adicione seu CSS aqui -->
+</head>
+<body>
+    <header class="bg-primary text-white text-center py-3">
+        <h1>Meu Formulário</h1>
+        <!-- Adicione mais elementos de cabeçalho aqui -->
+    </header>
+
+    <main class="container my-5">
+        <?= $this->renderSection('content') ?>
+    </main>
+
+    <footer class="bg-light text-center py-3">
+        <p>© 2024 Saraiva Soluções em Sistemas</p>
+        <!-- Adicione mais elementos de rodapé aqui -->
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+view informacoes_pessoais
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+
+Ajude-me.
+Onde eu crio o arquivo "erro"?
+Qual o conteúdo dele?
+
+
+----- 
+Boa tarde, estou desenvolvendo uma aplicação com codeigniter 4.
+
+Olha o meu controller 
+
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use App\Models\PacienteModel;
+
+class GeminiController extends ResourceController
+{
+    protected $apiKey;
+
+    public function __construct()
+    {
+        $this->apiKey = getenv('GEMINI_API_KEY'); // Carregar a chave de API de uma variável de ambiente
+    }
+
+    public function generateText($pacienteId)
+    {
+        $data = $this->gerarTexto($pacienteId);
+    }
+
+    public function gerarTexto($pacienteId)
+    {
+        // Nome da classe e método para log
+        $className = get_class($this) . '#generateText(' . $pacienteId . ')';
+        $this->logger->debug($className);
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $this->apiKey;
+        $this->logger->info("PUT $url");
+
+        $dadosPaciente = $this->getPacienteJSON($pacienteId);
+        $prompt = "Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, 
+                incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" 
+                . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
+
+        $contents = [
+            "contents" => [
+                "parts" => [
+                    "text" => $prompt,
+                ]
+            ]
+        ];
+
+        $curlOptPostFields = json_encode($contents);
+        $this->logger->info($curlOptPostFields);
+
+        $data = [];
+
+        try {
+
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => $curlOptPostFields,
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: application/json'
+                ),
+            ));
+
+            $response = curl_exec($curl);
+
+            if (curl_errno($curl)) {
+                $error_msg = curl_error($curl);
+
+                $data = [
+                    'status' => 'ERROR',
+                    'message' => $error_msg,
+                ];
+            } else {
+                $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+                $this->logger->info("HTTP STATUS: $http_status");
+
+                if ($http_status == 200) {
+                    $retorno = json_decode($response, true);
+                    $logMessage = "Response[" . json_encode($retorno, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "]";
+                    $this->logger->info($logMessage);
+
+                    $text = $retorno['candidates'][0]['content']['parts'][0]['text'];
+
+                    $usageMetadata = $retorno['usageMetadata'];
+                    $logMessage = "$className - USAGE METADATA[" . json_encode($usageMetadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "]";
+                    $this->logger->debug($logMessage);
+
+                    $data = [
+                        'status' => 'OK',
+                        'message' => $text,
+                    ];
+                } else {
+                    $data = [
+                        'status' => 'ERROR',
+                        'message' => "NÃO FOI POSSÍVEL GERAR A AVALIAÇÃO PARA O PACIENTE (" . $pacienteId . ")",
+                    ];
+                }
+            }
+
+            curl_close($curl);
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            // log_message('error', "Backtrace:\n" . print_r(debug_backtrace(), true));
+        }
+
+        // Log da resposta decodificada
+        $logMessage = "$className - RESPOSTA DECODIFICADA[" . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "]";
+        $this->logger->debug($logMessage);
+
+        // Retorna os dados de resposta
+        return $data;
+    }
+
+    public function getPacienteJSON($id)
+    {
+        $pacienteModel = new PacienteModel();
+        $paciente = $pacienteModel->find($id);
+
+        if (!$paciente) {
+            throw new \Exception('Paciente não encontrado');
+        }
+
+        $dadosPaciente = [
+            'nome' => $paciente['nome'],
+            'data_nascimento' => $paciente['data_nascimento'],
+            'sexo' => 'Masculino', // Supondo que o sexo seja masculino, ajuste conforme necessário
+            'historico_medico' => [
+                'condicoes' => $paciente['condicoes'],
+                'alergias' => $paciente['alergias'],
+                'medicacoes' => $paciente['medicacoes'],
+                'cirurgias' => $paciente['cirurgias'],
+                'historico_familiar' => $paciente['historico_familiar']
+            ],
+            'sintomas_atuais' => [
+                'sintomas' => $paciente['sintomas'],
+                'duracao_sintomas' => $paciente['duracao_sintomas'],
+                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
+                'fatores' => $paciente['fatores']
+            ],
+            'exames_diagnosticos' => [
+                'exames' => $paciente['exames'],
+                'resultados' => $paciente['resultados'],
+                'diagnosticos' => $paciente['diagnosticos']
+            ],
+            'estilo_vida' => [
+                'habitos_alimentares' => $paciente['habitos_alimentares'],
+                'atividade_fisica' => $paciente['atividade_fisica'],
+                'alcool' => $paciente['alcool'],
+                'tabaco' => $paciente['tabaco']
+            ],
+            'notas_plano_tratamento' => [
+                'notas' => $paciente['notas'],
+                'plano_tratamento' => $paciente['plano_tratamento'],
+                'proximas_consultas' => $paciente['proximas_consultas'],
+                'consentimento' => $paciente['consentimento']
+            ]
+        ];
+
+        return $dadosPaciente;
+    }
+
+}
+
+Aqui está a minha rota:
+$routes->get('gemini/generate/(:num)', 'GeminiController::generateText/$1');
+
+E aqui eu tenho minha view.
+
+Só tome conhecimento, por enquanto. OK
+
+----- 
+
+Ajude-me a colocar mais um botão de ação nesta listagem.
+Esse deve abrir uma tela pra vermos a avaliação que foi efetuada.
+Eu precisava de algo esteticamente bem acabado...
+
+----- 
+
+Por favor, me ajude.
+
+Olhe meu model PacienteModel:
+
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class PacienteModel extends Model
+{
+    protected $table = 'pacientes';
+    protected $allowedFields = [
+        'nome', 
+		'data_nascimento', 
+		'condicoes', 
+		'alergias'		, 
+		'medicacoes', 
+		'cirurgias', 
+		'historico_familiar', 
+		'sintomas', 
+		'duracao_sintomas', 
+		'intensidade_sintomas', 
+		'fatores', 
+		'exames', 
+		'resultados', 
+		'diagnosticos', 
+		'habitos_alimentares', 
+		'atividade_fisica', 
+		'alcool', 
+		'tabaco', 
+		'notas', 
+		'plano_tratamento', 
+		'proximas_consultas', 
+		'consentimento'
+    ];
+}
+
+Eu preciso criar uma coluna para indicar o sexo do paciente.
+Ajude-me a criar também uma migration pra isso.
+
+Claro, vamos adicionar a coluna `sexo` ao seu modelo `PacienteModel` e criar uma migration para isso.
+
+### Atualizando o Model
+
+Primeiro, vamos atualizar o seu `PacienteModel` para incluir o campo `sexo`:
+
+```php
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class PacienteModel extends Model
+{
+    protected $table = 'pacientes';
+    protected $allowedFields = [
+        'nome', 
+        'data_nascimento', 
+        'condicoes', 
+        'alergias', 
+        'medicacoes', 
+        'cirurgias', 
+        'historico_familiar', 
+        'sintomas', 
+        'duracao_sintomas', 
+        'intensidade_sintomas', 
+        'fatores', 
+        'exames', 
+        'resultados', 
+        'diagnosticos', 
+        'habitos_alimentares', 
+        'atividade_fisica', 
+        'alcool', 
+        'tabaco', 
+        'notas', 
+        'plano_tratamento', 
+        'proximas_consultas', 
+        'consentimento',
+        'sexo' // Adicionando o campo sexo
+    ];
+}
+```
+
+### Criando a Migration
+
+Agora, vamos criar uma migration para adicionar a coluna `sexo` na tabela `pacientes`.
+
+1. No terminal, execute o comando para criar a migration:
+
+```sh
+php spark make:migration AddSexoToPacientes
+```
+
+2. Abra o arquivo de migration gerado em `app/Database/Migrations/` e adicione o código para criar a coluna `sexo`:
+
+```php
+<?php
+
+namespace App\Database\Migrations;
+
+use CodeIgniter\Database\Migration;
+
+class AddSexoToPacientes extends Migration
+{
+    public function up()
+    {
+        $this->forge->addColumn('pacientes', [
+            'sexo' => [
+                'type' => 'VARCHAR',
+                'constraint' => 10,
+                'null' => true, // Permitir valores nulos, ajuste conforme necessário
+                'after' => 'data_nascimento' // Adiciona a coluna após 'data_nascimento'
+            ],
+        ]);
+    }
+
+    public function down()
+    {
+        $this->forge->dropColumn('pacientes', 'sexo');
+    }
+}
+```
+
+3. Execute a migration para aplicar as mudanças no banco de dados:
+
+```sh
+php spark migrate
+```
+
+### Resumo
+
+- Atualizamos o `PacienteModel` para incluir o campo `sexo`.
+- Criamos uma migration para adicionar a coluna `sexo` na tabela `pacientes`.
+- Executamos a migration para aplicar as mudanças no banco de dados.
+
+Isso deve adicionar a coluna `sexo` ao seu modelo e à tabela no banco de dados. Se precisar de mais alguma coisa, estou aqui para ajudar! 😊
+
+----- 
+
+Agora temos a view informacoes_pessoais:
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+
+Vamos adicionar o campo sexo aí, seguindo as melhores práticas, o usuário deveria escolher o sexo (não digitar), e talvez devesse existir uma informação como não informado.
+
+----- 
+
+Estou com a seguinte necessidade, eu não preciso informar o nome do paciente, é mais do que isso, eu não deveria ter um nome aí.
+Mas está modelado assim, então eu gostaria de deixar o nome read only no form.
+E na hora de gravar os dados se o nome não estiver informado vamos criar uma string única para cada paciente, me sugira algo, por favor.
+
+Vamos ajustar o método `salvarInformacoesPessoais` para tornar o campo `nome` somente leitura e gerar um nome único se ele não estiver informado.
+
+### Atualizando o Método `salvarInformacoesPessoais`
+
+```php
+public function salvarInformacoesPessoais()
+{
+    $model = new PacienteModel();
+    $data = $this->request->getPost();
+
+    // Verificar se o nome está vazio e gerar um nome único se necessário
+    if (empty($data['nome'])) {
+        $data['nome'] = $this->gerarNomeUnico();
+    }
+
+    if (isset($data['id']) && !empty($data['id'])) {
+        $model->save($data);
+        $id = $data['id'];
+    } else {
+        $model->save($data);
+        $id = $model->insertID();
+    }
+
+    return redirect()->to(site_url('formulario/historico_medico/' . $id));
+}
+
+private function gerarNomeUnico()
+{
+    return 'Paciente_' . uniqid();
+}
+```
+
+### Explicação das Alterações
+
+- **Verificação do Nome**: Adicionamos uma verificação para ver se o campo `nome` está vazio. Se estiver, chamamos o método `gerarNomeUnico()` para criar um nome único.
+- **Método `gerarNomeUnico`**: Este método gera uma string única usando `uniqid()`.
+
+### Atualizando a View
+
+Certifique-se de que o campo `nome` na view está definido como somente leitura:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" readonly>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group">
+                <label for="sexo">Sexo:</label>
+                <select class="form-control" id="sexo" name="sexo" required>
+                    <option value="">Selecione</option>
+                    <option value="Masculino" <?= isset($paciente['sexo']) && $paciente['sexo'] == 'Masculino' ? 'selected' : '' ?>>Masculino</option>
+                    <option value="Feminino" <?= isset($paciente['sexo']) && $paciente['sexo'] == 'Feminino' ? 'selected' : '' ?>>Feminino</option>
+                    <option value="Nao Informado" <?= isset($paciente['sexo']) && $paciente['sexo'] == 'Nao Informado' ? 'selected' : '' ?>>Não Informado</option>
+                </select>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+### Resumo
+
+- Atualizamos o método `salvarInformacoesPessoais` para gerar um nome único se o campo `nome` estiver vazio.
+- Tornamos o campo `nome` somente leitura na view.
+
+Isso deve resolver sua necessidade de não exigir a entrada do nome do paciente e garantir que cada paciente tenha um identificador único. Se precisar de mais alguma coisa, estou aqui para ajudar! 😊
+
+Fonte: conversa com o Copilot, 12/08/2024
+(1) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+
+----- 
+Ajude-me. Crie um pessoa ficticia para que eu preecha os formulários de uma aplicação de avaliação médica.
+A pessoa deve ter entre 35 e 40 anos de idade, sexo feminino, deve ter pequenos desvios de conduta alimentar e sintomas que indiquem alguma coisa.
+E me dê alguém com alguma propensão séria para um problema genético.
+Olhe as informações que passei e me forneça todos os dados pra eu fazer um cadastro.
+Aqui estão os dados que eu preciso:
+
+### Dados Pessoais
+- **Nome**:
+- **Data de Nascimento**:
+- **Sexo:
+
+### Histórico Médico
+- **Condições**: 
+- **Alergias**: 
+- **Medicações**: 
+- **Cirurgias**: 
+- **Histórico Familiar**: 
+
+### Sintomas Atuais
+- **Sintomas**: 
+- **Duração dos Sintomas**: 
+- **Intensidade dos Sintomas**: 
+- **Fatores**: 
+
+### Exames e Diagnósticos
+- **Exames**: 
+- **Resultados**: 
+- **Diagnósticos**: 
+
+### Estilo de Vida
+- **Hábitos Alimentares**: 
+- **Atividade Física**: 
+- **Consumo de Álcool**: 
+- **Consumo de Tabaco**: 
+
+### Notas e Plano de Tratamento
+- **Notas**: 
+- **Plano de Tratamento**: 
+- **Próximas Consultas**: 
+- **Consentimento**: 
+
+
+Claro, vou criar uma pessoa fictícia com as características que você mencionou. Aqui estão os dados:
+
+### Dados Pessoais
+- **Nome**: Ana Clara Silva
+- **Data de Nascimento**: 15 de março de 1985
+- **Sexo**: Feminino
+
+### Histórico Médico
+- **Condições**: Hipertensão leve, intolerância à lactose
+- **Alergias**: Pólen
+- **Medicações**: Losartana (para hipertensão)
+- **Cirurgias**: Apendicectomia aos 25 anos
+- **Histórico Familiar**: Mãe com diabetes tipo 2, pai com histórico de doença cardíaca
+
+### Sintomas Atuais
+- **Sintomas**: Fadiga, dores de cabeça frequentes, ganho de peso
+- **Duração dos Sintomas**: 6 meses
+- **Intensidade dos Sintomas**: Moderada
+- **Fatores**: Estresse no trabalho, alimentação irregular
+
+### Exames e Diagnósticos
+- **Exames**: Hemograma completo, teste de intolerância à lactose, eletrocardiograma
+- **Resultados**: Hemograma normal, teste de intolerância à lactose positivo, eletrocardiograma com pequenas alterações
+- **Diagnósticos**: Intolerância à lactose, hipertensão leve, possível início de síndrome metabólica
+
+### Estilo de Vida
+- **Hábitos Alimentares**: Consumo frequente de fast food, baixa ingestão de vegetais
+- **Atividade Física**: Sedentária, raramente pratica exercícios
+- **Consumo de Álcool**: Moderado, socialmente
+- **Consumo de Tabaco**: Não fuma
+
+### Notas e Plano de Tratamento
+- **Notas**: Paciente precisa melhorar hábitos alimentares e aumentar atividade física
+- **Plano de Tratamento**: Dieta balanceada, exercícios regulares, acompanhamento com nutricionista e cardiologista
+- **Próximas Consultas**: Consulta com nutricionista em 1 mês, cardiologista em 3 meses
+- **Consentimento**: Paciente consente com o plano de tratamento proposto
+
+Espero que essas informações sejam úteis para o seu formulário! Se precisar de mais alguma coisa, estou à disposição.
+
+----- 
+
+Vamos incluir o sexo na listagem de pacientes 
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<style>
+    .btn-view {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition-duration: 0.4s;
+    }
+
+    .btn-view:hover {
+        background-color: white;
+        color: #007bff;
+        border: 2px solid #007bff;
+    }
+</style>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Pacientes</span>
+        <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-success">Novo Paciente</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= $paciente['data_nascimento'] ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                        <td>
+                            <a href="<?= site_url('gemini/view/' . $paciente['id']) ?>" class="btn btn-view">Ver Avaliação</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+Para incluir o sexo na listagem de pacientes, você pode adicionar uma nova coluna na tabela. Aqui está o código atualizado:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<style>
+    .btn-view {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition-duration: 0.4s;
+    }
+
+    .btn-view:hover {
+        background-color: white;
+        color: #007bff;
+        border: 2px solid #007bff;
+    }
+</style>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Pacientes</span>
+        <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-success">Novo Paciente</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Sexo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= $paciente['data_nascimento'] ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td><?= $paciente['sexo'] ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                        <td>
+                            <a href="<?= site_url('gemini/view/' . $paciente['id']) ?>" class="btn btn-view">Ver Avaliação</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+Isso adicionará a coluna "Sexo" à tabela de pacientes. Se precisar de mais alguma coisa, estou à disposição!
+
+Fonte: conversa com o Copilot, 12/08/2024
+(1) github.com. https://github.com/leopelegrini/codeigniter-clinica-medica/tree/75fdbf3997d711e596e46a413b0db07f5a16081b/app%2FViews%2Fpacientes%2Findex.php.
+
+----- 
+Aqui na listagem de pacientes:
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<style>
+    .btn-view {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition-duration: 0.4s;
+    }
+
+    .btn-view:hover {
+        background-color: white;
+        color: #007bff;
+        border: 2px solid #007bff;
+    }
+</style>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Pacientes</span>
+        <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-success">Novo Paciente</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Sexo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= $paciente['data_nascimento'] ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td><?= $paciente['sexo'] ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                        <td>
+                            <a href="<?= site_url('gemini/view/' . $paciente['id']) ?>" class="btn btn-view">Ver Avaliação</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+Ajude-me a mostrar a data no formato DD/MM/YYYY.
+
+Para mostrar a data no formato DD/MM/YYYY, você pode usar a função `DateTime::format` no PHP. Aqui está o código atualizado:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<style>
+    .btn-view {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+        transition-duration: 0.4s;
+    }
+
+    .btn-view:hover {
+        background-color: white;
+        color: #007bff;
+        border: 2px solid #007bff;
+    }
+</style>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Pacientes</span>
+        <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-success">Novo Paciente</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Sexo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= (new DateTime($paciente['data_nascimento']))->format('d/m/Y') ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td><?= $paciente['sexo'] ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                        <td>
+                            <a href="<?= site_url('gemini/view/' . $paciente['id']) ?>" class="btn btn-view">Ver Avaliação</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+Isso formatará a data de nascimento no formato DD/MM/YYYY. Se precisar de mais alguma coisa, estou à disposição!
+
+----- 
+
+No controller listamos os pacientes assim:
+
+    public function listarPacientes()
+    {
+        $model = new PacienteModel();
+        $data['pacientes'] = $model->findAll();
+
+        return view('formulario/listar_pacientes', $data);
+    }
+
+Eu gostaria de ordenar os pacientes do maior para o menor id.
+
+Se for necessário ou melhor podemos alterar o PacienteModel.
+
+Para ordenar os pacientes do maior para o menor ID, você pode modificar a consulta no seu controlador ou no seu modelo. Vou mostrar como fazer isso de ambas as maneiras.
+
+### Alterando no Controlador
+
+Você pode usar o método `orderBy` no controlador para ordenar os pacientes:
+
+```php
+public function listarPacientes()
+{
+    $model = new PacienteModel();
+    $data['pacientes'] = $model->orderBy('id', 'DESC')->findAll();
+
+    return view('formulario/listar_pacientes', $data);
+}
+```
+
+### Alterando no Modelo
+
+Se preferir, você pode definir a ordenação padrão no modelo. Para isso, adicione o método `initialize` no seu `PacienteModel`:
+
+```php
+class PacienteModel extends \CodeIgniter\Model
+{
+    protected $table = 'pacientes';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['nome', 'data_nascimento', 'sexo', 'outros_campos'];
+
+    protected function initialize()
+    {
+        $this->orderBy('id', 'DESC');
+    }
+}
+```
+
+Ambas as abordagens são válidas, mas a escolha depende de onde você prefere centralizar a lógica de ordenação. Alterar no controlador pode ser mais flexível se você precisar de diferentes ordenações em diferentes métodos. Alterar no modelo pode ser mais conveniente se a ordenação for sempre a mesma.
+
+Se precisar de mais alguma coisa, estou à disposição!

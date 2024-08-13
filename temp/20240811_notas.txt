@@ -1,0 +1,2854 @@
+Bom dia.
+
+Estou trabalhando num aplicação, desenvolvendo a mesma com codeignitor 4, e as views tem o bootstrap.
+
+Você é um médico generalista que está me ajudando. 
+
+Observe algumas coisas. Nós criamos um modelo: 
+
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class PacienteModel extends Model
+{
+    protected $table = 'pacientes';
+    protected $allowedFields = [
+        'nome', 
+		'data_nascimento', 
+		'condicoes', 
+		'alergias'		, 
+		'medicacoes', 
+		'cirurgias', 
+		'historico_familiar', 
+		'sintomas', 
+		'duracao_sintomas', 
+		'intensidade_sintomas', 
+		'fatores', 
+		'exames', 
+		'resultados', 
+		'diagnosticos', 
+		'habitos_alimentares', 
+		'atividade_fisica', 
+		'alcool', 
+		'tabaco', 
+		'notas', 
+		'plano_tratamento', 
+		'proximas_consultas', 
+		'consentimento'
+    ];
+}
+
+Nós temos um controller:
+
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index()
+    {
+        return view('formulario/informacoes_pessoais');
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+
+        return redirect()->to('/formulario/historico_medico');
+    }
+
+    public function historicoMedico()
+    {
+        return view('formulario/historico_medico');
+    }
+
+    public function salvarHistoricoMedico()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+
+        return redirect()->to('/formulario/sintomas_atuais');
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+
+Aqui estão as rotas: 
+
+<?php
+
+use CodeIgniter\Router\RouteCollection;
+
+/**
+ * @var RouteCollection $routes
+ */
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais', 'FormularioController::index');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico', 'FormularioController::historicoMedico');
+$routes->post('/formulario/salvarHistoricoMedico', 'FormularioController::salvarHistoricoMedico');
+// Continue adicionando rotas para as outras etapas...
+
+E minha view até o momento:
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="/formulario/salvarInformacoesPessoais" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <!-- Outros campos... -->
+            <button type="submit" class="btn btn-primary">Próximo</button>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+A ideia é trabalhar como um workflow onde cada form representa uma etapa.
+
+O que você acha?
+
+
+Seu modelo `PacienteModel` está bem estruturado para armazenar informações detalhadas sobre os pacientes. Para implementar um fluxo de trabalho (workflow) que permita preencher cada uma das telas pertinentes, você pode considerar as seguintes sugestões:
+
+1. **Divisão do Formulário em Etapas**:
+   - **Dados Pessoais**: Nome, data de nascimento.
+   - **Histórico Médico**: Condições, alergias, medicações, cirurgias, histórico familiar.
+   - **Sintomas Atuais**: Sintomas, duração dos sintomas, intensidade dos sintomas, fatores.
+   - **Exames e Diagnósticos**: Exames, resultados, diagnósticos.
+   - **Estilo de Vida**: Hábitos alimentares, atividade física, consumo de álcool e tabaco.
+   - **Notas e Plano de Tratamento**: Notas, plano de tratamento, próximas consultas, consentimento.
+
+2. **Validação de Dados**:
+   - Certifique-se de validar os dados em cada etapa antes de permitir que o usuário avance para a próxima. Isso pode incluir verificações de campos obrigatórios e formatos de dados.
+
+3. **Navegação entre Etapas**:
+   - Implemente botões de "Próximo" e "Anterior" para permitir que o usuário navegue entre as etapas do formulário.
+   - Considere salvar os dados parcialmente preenchidos em cada etapa para evitar perda de informações.
+
+4. **Interface de Usuário**:
+   - Utilize uma barra de progresso ou indicadores de etapas para mostrar ao usuário em qual parte do fluxo de trabalho ele está.
+   - Mantenha a interface limpa e intuitiva, com instruções claras para cada campo.
+
+5. **Armazenamento e Recuperação de Dados**:
+   - Garanta que os dados sejam armazenados de forma segura no banco de dados.
+   - Implemente funcionalidades para recuperar e editar fichas médicas existentes.
+
+Aqui está um exemplo de como você pode estruturar uma das etapas no seu controlador:
+
+```php
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class PacienteController extends BaseController
+{
+    public function createStep1()
+    {
+        return view('paciente/step1');
+    }
+
+    public function storeStep1()
+    {
+        $pacienteModel = new PacienteModel();
+
+        $data = [
+            'nome' => $this->request->getPost('nome'),
+            'data_nascimento' => $this->request->getPost('data_nascimento'),
+        ];
+
+        $pacienteModel->save($data);
+
+        return redirect()->to('/paciente/step2');
+    }
+
+    // Adicione métodos para as outras etapas...
+}
+```
+
+Essa abordagem modulariza o processo de preenchimento da ficha médica, tornando-o mais gerenciável e amigável para o usuário. Se precisar de mais detalhes ou tiver outras perguntas, estou aqui para ajudar! 😊
+
+
+Vamos começar com algo simples. Ajude-me.
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="/formulario/salvarInformacoesPessoais" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <!-- Outros campos... -->
+            <button type="submit" class="btn btn-primary">Próximo</button>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+Eu gostaria que o botão próximo fique alinhado à direita na página.
+Deve haver mais um campo na tela, mostrando a idade do paciente, mas esse campo não deve ser digitável. A idade deve ser calculada depois que o usuário digite a data de nascimento do paciente.
+Pode me ajudar?
+
+Claro, posso ajudar com isso! Vamos fazer as seguintes alterações:
+
+1. Alinhar o botão "Próximo" à direita.
+2. Adicionar um campo para mostrar a idade do paciente, que será calculada automaticamente após a inserção da data de nascimento.
+
+Aqui está o código atualizado:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="/formulario/salvarInformacoesPessoais" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Alinhamento do Botão**: Adicionei a classe `text-right` ao `div` que contém o botão "Próximo" para alinhá-lo à direita.
+2. **Campo de Idade**: Adicionei um campo de entrada para mostrar a idade do paciente, que é somente leitura (`readonly`).
+3. **Cálculo da Idade**: Adicionei um script JavaScript que calcula a idade do paciente com base na data de nascimento inserida e atualiza o campo de idade automaticamente.
+
+Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/mauriciopj/SGC/tree/d17a87f41953dec23fbdd1dc160ac18a1948ba79/Codigo_Fonte%2Fapplication%2Fviews%2FUsuarios%2Fcadastro_usuarios.php.
+(2) github.com. https://github.com/fmmh10/Pandemic/tree/cd4fd0f5f9c0629d3e1840e1d6bf5b6369add557/ASW%2Fregister.php.
+(3) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+---
+
+Agora, nós estamos dividindo a aplicação assim:
+
+1. **Divisão do Formulário em Etapas**:
+   - **Dados Pessoais**: Nome, data de nascimento.
+   - **Histórico Médico**: Condições, alergias, medicações, cirurgias, histórico familiar.
+   - **Sintomas Atuais**: Sintomas, duração dos sintomas, intensidade dos sintomas, fatores.
+   - **Exames e Diagnósticos**: Exames, resultados, diagnósticos.
+   - **Estilo de Vida**: Hábitos alimentares, atividade física, consumo de álcool e tabaco.
+   - **Notas e Plano de Tratamento**: Notas, plano de tratamento, próximas consultas, consentimento.
+
+E chegou o momento do histórico médico.
+
+a view de informacoes pessoais está assim: 
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="/formulario/salvarInformacoesPessoais" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+
+E a view de historico médico está assim:
+
+<form action="/formulario/salvarHistoricoMedico" method="post">
+    <label for="condicoes">Condições Médicas Preexistentes:</label>
+    <textarea id="condicoes" name="condicoes"></textarea>
+    <!-- Outros campos... -->
+    <button type="submit">Próximo</button>
+</form>
+
+
+Então vamos deixar no mesmo padrão das informações pessoais e vamos colocar os campos: Condições, alergias, medicações, cirurgias, histórico familiar.
+
+Essa view deve ter o botão próximo e o botão voltar. o botão voltar deve ficar na esquerda e o próximo na direita.
+
+Olha também o controller:
+
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index()
+    {
+        return view('formulario/informacoes_pessoais');
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+
+        return redirect()->to('/formulario/historico_medico');
+    }
+
+    public function historicoMedico()
+    {
+        return view('formulario/historico_medico');
+    }
+
+    public function salvarHistoricoMedico()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+
+        return redirect()->to('/formulario/sintomas_atuais');
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+
+Ajude-me, por favor. Lembre-se, você é um médico generalista me ajudando, mas também é um desenvolvedor de software como eu.
+
+
+
+Claro, vamos ajustar a view de histórico médico para seguir o mesmo padrão das informações pessoais e adicionar os campos necessários. Também vamos incluir os botões "Voltar" e "Próximo" com o alinhamento correto.
+
+Aqui está o código atualizado para a view de histórico médico:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="/formulario/salvarHistoricoMedico" method="post">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="/formulario/informacoes_pessoais" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Estrutura do Formulário**: Adicionei os campos para condições médicas, alergias, medicações, cirurgias e histórico familiar, todos com a classe `form-control` para manter o estilo consistente.
+2. **Botões de Navegação**: Adicionei um botão "Voltar" que redireciona para a página de informações pessoais e um botão "Próximo" para submeter o formulário. Usei a classe `d-flex justify-content-between` para alinhar os botões corretamente.
+
+### Controller
+
+O controller já está configurado corretamente para lidar com a navegação entre as etapas. Não há necessidade de alterações adicionais no momento.
+
+Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+
+-----------------
+
+o action da view informacoes_pessoais não tá legal pois está apontando para algo que não existe. use os helpers do codeigniter para montar as urls. Ajude-me
+
+
+Entendi! Vamos ajustar o `action` da view `informacoes_pessoais` para usar os helpers do CodeIgniter e garantir que as URLs estejam corretas.
+
+Aqui está o código atualizado para a view `informacoes_pessoais`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Uso do Helper `site_url`**: Substituí o `action` do formulário para usar o helper `site_url('formulario/salvarInformacoesPessoais')`. Isso garante que a URL gerada esteja correta e funcione conforme esperado no ambiente do CodeIgniter.
+
+Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/mauriciopj/SGC/tree/d17a87f41953dec23fbdd1dc160ac18a1948ba79/Codigo_Fonte%2Fapplication%2Fviews%2FUsuarios%2Fcadastro_usuarios.php.
+(2) github.com. https://github.com/fmmh10/Pandemic/tree/cd4fd0f5f9c0629d3e1840e1d6bf5b6369add557/ASW%2Fregister.php.
+(3) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+
+---------
+
+A gente tem que fazer alguma alteração na view historico_medico e no controller. todos os forms estão falando do mesmo registro de paciente no banco. então eu tenho que conservar o id criado na primeira tela, e temos que alterar o registro com os dados dos campos, não criar um registro novo. entendeu? o que acha? consegue me ajudar?
+
+Entendi perfeitamente! Precisamos garantir que o ID do paciente seja mantido ao longo das etapas do formulário para atualizar o mesmo registro no banco de dados. Vamos fazer as seguintes alterações:
+
+1. **Armazenar o ID do Paciente**: Após salvar as informações pessoais, redirecionar para a próxima etapa com o ID do paciente.
+2. **Atualizar o Registro Existente**: Nas etapas subsequentes, usar o ID do paciente para atualizar o registro existente.
+
+### Controller Atualizado
+
+Vamos ajustar o controller para armazenar e passar o ID do paciente entre as etapas:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index()
+    {
+        return view('formulario/informacoes_pessoais');
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+        $id = $model->insertID();
+
+        return redirect()->to('/formulario/historico_medico/' . $id);
+    }
+
+    public function historicoMedico($id)
+    {
+        return view('formulario/historico_medico', ['id' => $id]);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to('/formulario/sintomas_atuais/' . $id);
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### View Atualizada para Histórico Médico
+
+Vamos ajustar a view `historico_medico` para incluir o ID do paciente e garantir que os dados sejam enviados corretamente:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $id) ?>" method="post">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Controller**:
+   - **`salvarInformacoesPessoais`**: Após salvar os dados, redireciona para a próxima etapa com o ID do paciente.
+   - **`historicoMedico`**: Recebe o ID do paciente e passa para a view.
+   - **`salvarHistoricoMedico`**: Usa o ID do paciente para atualizar o registro existente e redireciona para a próxima etapa com o ID.
+
+2. **View `historico_medico`**:
+   - **Formulário**: Inclui o ID do paciente na URL de ação do formulário para garantir que os dados sejam enviados corretamente.
+
+Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+
+
+
+---------
+
+-------
+
+Eu acabei sendo jogado pra http://localhost/websaraiva/index.php/formulario/historico_medico/1
+
+O que resultou num 404.
+
+O resultado esperado era: http://localhost/websaraiva/formulario/historico_medico/1
+
+
+
+
+Entendi. Parece que o problema está relacionado ao uso do `index.php` na URL. Vamos ajustar as configurações do CodeIgniter para remover o `index.php` das URLs.
+
+### Passos para Remover `index.php` das URLs
+
+1. **Configuração do `.htaccess`**:
+   - Certifique-se de que o arquivo `.htaccess` na raiz do seu projeto está configurado corretamente. Aqui está um exemplo de configuração:
+
+```plaintext
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /websaraiva/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+```
+
+2. **Configuração do `Config/App.php`**:
+   - No arquivo `app/Config/App.php`, defina a propriedade `indexPage` como uma string vazia:
+
+```php
+public $indexPage = '';
+```
+
+### Ajuste no Controller
+
+Vamos garantir que as URLs geradas no controller estejam corretas:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index()
+    {
+        return view('formulario/informacoes_pessoais');
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+        $id = $model->insertID();
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        return view('formulario/historico_medico', ['id' => $id]);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Views
+
+Certifique-se de que as URLs nas views também estão usando o helper `site_url`:
+
+#### View `informacoes_pessoais`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+#### View `historico_medico`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $id) ?>" method="post">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Teste
+
+Após fazer essas alterações, teste novamente para garantir que as URLs estejam corretas e que o redirecionamento funcione conforme esperado.
+
+Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/mauriciopj/SGC/tree/d17a87f41953dec23fbdd1dc160ac18a1948ba79/Codigo_Fonte%2Fapplication%2Fviews%2FUsuarios%2Fcadastro_usuarios.php.
+(2) github.com. https://github.com/fmmh10/Pandemic/tree/cd4fd0f5f9c0629d3e1840e1d6bf5b6369add557/ASW%2Fregister.php.
+(3) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+----- 
+
+Vamos verificar alguns pontos que podem estar causando o erro 404:
+
+1. **Rotas Configuradas Corretamente**:
+   - Certifique-se de que a rota para `historico_medico` está configurada corretamente no arquivo de rotas.
+
+2. **Arquivo `.htaccess`**:
+   - Verifique se o arquivo `.htaccess` está configurado corretamente para remover o `index.php` das URLs.
+
+3. **Método no Controller**:
+   - Certifique-se de que o método `historicoMedico` no controller está recebendo o parâmetro `$id` corretamente.
+
+Vamos revisar cada um desses pontos.
+
+### Rotas Configuradas Corretamente
+
+Certifique-se de que o arquivo de rotas (`app/Config/Routes.php`) contém a rota correta para `historico_medico`:
+
+```php
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+```
+
+### Arquivo `.htaccess`
+
+Certifique-se de que o arquivo `.htaccess` na raiz do seu projeto está configurado corretamente:
+
+```plaintext
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /websaraiva/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
+</IfModule>
+```
+
+### Método no Controller
+
+Certifique-se de que o método `historicoMedico` no controller está recebendo o parâmetro `$id` corretamente:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index()
+    {
+        return view('formulario/informacoes_pessoais');
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+        $id = $model->insertID();
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        return view('formulario/historico_medico', ['id' => $id]);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Teste
+
+Após verificar e ajustar esses pontos, teste novamente para garantir que a URL `http://localhost/websaraiva/formulario/historico_medico/3` funcione corretamente.
+
+Se ainda estiver enfrentando problemas, por favor, compartilhe mais detalhes sobre a configuração do seu projeto para que eu possa ajudar melhor. 😊
+
+
+----- 
+
+Quando acionamos o botão voltar na tela historico_medico e voltamos para informacoes_pessoais, temos que voltar carregando os dados do paciente que estamos editando. Ajude-me.
+
+
+Para garantir que os dados do paciente sejam carregados corretamente ao voltar para a tela de informações pessoais, precisamos ajustar o controller para buscar os dados do paciente e passá-los para a view. Vamos fazer isso em duas etapas:
+
+1. **Ajustar o Controller**: Modificar os métodos para carregar os dados do paciente.
+2. **Ajustar as Views**: Modificar as views para exibir os dados carregados.
+
+### Ajuste no Controller
+
+Vamos ajustar o controller para carregar os dados do paciente e passá-los para as views:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $model->save($data);
+        $id = $model->insertID();
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Views
+
+#### View `informacoes_pessoais`:
+
+Vamos ajustar a view `informacoes_pessoais` para exibir os dados carregados:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+#### View `historico_medico`:
+
+Vamos ajustar a view `historico_medico` para incluir o ID do paciente e garantir que os dados sejam enviados corretamente:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Controller**:
+   - **`index`**: Agora aceita um parâmetro `$id` opcional para carregar os dados do paciente.
+   - **`historicoMedico`**: Carrega os dados do paciente e passa para a view.
+   - **`salvarInformacoesPessoais`** e **`salvarHistoricoMedico`**: Inclui o ID do paciente nos dados salvos.
+
+2. **Views**:
+   - **`informacoes_pessoais`**: Carrega os dados do paciente e preenche os campos do formulário.
+   - **`historico_medico`**: Carrega os dados do paciente e preenche os campos do formulário. Inclui o ID do paciente na URL do botão "Voltar".
+
+Com essas alterações, ao clicar no botão "Voltar" na tela de histórico médico, os dados do paciente serão carregados corretamente na tela de informações pessoais. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+
+----- 
+
+levou em consideração que eu nem sempre tenho o id, se é um registro novo eu seja, se eu começo pela tela de informacoes pessoais, é novo, mas se venho do botão voltar é uma edição. ajude-me
+
+Entendi. Precisamos ajustar o fluxo para lidar com ambos os casos: criação de um novo registro e edição de um registro existente. Vamos garantir que o ID do paciente seja passado corretamente entre as etapas e que os dados sejam carregados quando necessário.
+
+### Ajuste no Controller
+
+Vamos ajustar o controller para lidar com a criação e edição de registros:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Views
+
+#### View `informacoes_pessoais`:
+
+Vamos ajustar a view `informacoes_pessoais` para lidar com a criação e edição de registros:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+#### View `historico_medico`:
+
+Vamos ajustar a view `historico_medico` para incluir o ID do paciente e garantir que os dados sejam enviados corretamente:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Controller**:
+   - **`index`**: Agora aceita um parâmetro `$id` opcional para carregar os dados do paciente.
+   - **`salvarInformacoesPessoais`**: Verifica se o ID está presente nos dados do formulário. Se estiver, atualiza o registro existente; caso contrário, cria um novo registro.
+   - **`historicoMedico`**: Carrega os dados do paciente e passa para a view.
+   - **`salvarHistoricoMedico`**: Usa o ID do paciente para atualizar o registro existente e redireciona para a próxima etapa com o ID.
+
+2. **Views**:
+   - **`informacoes_pessoais`**: Carrega os dados do paciente e preenche os campos do formulário. Inclui um campo oculto para o ID do paciente.
+   - **`historico_medico`**: Carrega os dados do paciente e preenche os campos do formulário. Inclui um campo oculto para o ID do paciente e garante que o botão "Voltar" redirecione corretamente.
+
+Com essas alterações, o fluxo deve funcionar corretamente tanto para a criação de novos registros quanto para a edição de registros existentes. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+----- 
+
+mas se podemos ficar indo e voltando a tela de historico_medico precisa de algum ajuste, não precisa? vamos dizer que o usuário avançou para o historico médico, digitou o campo de condiçoes médicas, mas por um motivo qualquer voltou pras informações pessoais. o campo digitado tem que ser salvo e na hora que avançar tem que trazer o campo preenchido. entendeu? acha que pode me ajudar?
+
+Entendi perfeitamente. Precisamos garantir que os dados sejam salvos temporariamente quando o usuário navega entre as etapas, para que não sejam perdidos ao voltar para uma etapa anterior. Vamos ajustar o controller e as views para lidar com isso.
+
+### Ajuste no Controller
+
+Vamos ajustar o controller para salvar os dados temporariamente e carregá-los corretamente ao voltar para uma etapa anterior:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function salvarEVoltar($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Views
+
+#### View `informacoes_pessoais`:
+
+Vamos ajustar a view `informacoes_pessoais` para lidar com a criação e edição de registros:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+#### View `historico_medico`:
+
+Vamos ajustar a view `historico_medico` para incluir o ID do paciente e garantir que os dados sejam enviados corretamente:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/salvarEVoltar/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Controller**:
+   - **`salvarEVoltar`**: Novo método para salvar os dados temporariamente e redirecionar para a tela de informações pessoais.
+   - **`index`**: Agora aceita um parâmetro `$id` opcional para carregar os dados do paciente.
+   - **`salvarInformacoesPessoais`**: Verifica se o ID está presente nos dados do formulário. Se estiver, atualiza o registro existente; caso contrário, cria um novo registro.
+   - **`historicoMedico`**: Carrega os dados do paciente e passa para a view.
+   - **`salvarHistoricoMedico`**: Usa o ID do paciente para atualizar o registro existente e redireciona para a próxima etapa com o ID.
+
+2. **Views**:
+   - **`informacoes_pessoais`**: Carrega os dados do paciente e preenche os campos do formulário. Inclui um campo oculto para o ID do paciente.
+   - **`historico_medico`**: Carrega os dados do paciente e preenche os campos do formulário. Inclui um campo oculto para o ID do paciente e garante que o botão "Voltar" redirecione corretamente.
+
+Com essas alterações, os dados serão salvos temporariamente ao navegar entre as etapas, garantindo que não sejam perdidos ao voltar para uma etapa anterior. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+
+----- 
+
+Whoops!
+We seem to have hit a snag. Please try again later...
+
+
+Parece que houve um problema. Vamos tentar resolver isso juntos. Aqui estão algumas coisas que podemos verificar:
+
+1. **Logs de Erro**:
+   - Verifique os logs de erro do CodeIgniter para obter mais detalhes sobre o problema. Eles geralmente estão localizados em `writable/logs/`.
+
+2. **Configuração do Ambiente**:
+   - Certifique-se de que o ambiente de desenvolvimento está configurado corretamente. Verifique o arquivo `.env` para garantir que as configurações estão corretas.
+
+3. **Rotas**:
+   - Certifique-se de que as rotas estão configuradas corretamente no arquivo `app/Config/Routes.php`.
+
+4. **Permissões**:
+   - Verifique as permissões das pastas e arquivos, especialmente a pasta `writable`.
+
+Vamos revisar as rotas e o controller novamente para garantir que tudo esteja correto.
+
+### Rotas
+
+Certifique-se de que as rotas no arquivo `app/Config/Routes.php` estão configuradas assim:
+
+```php
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais/(:num)', 'FormularioController::index/$1');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+$routes->get('/formulario/salvarEVoltar/(:num)', 'FormularioController::salvarEVoltar/$1');
+// Continue adicionando rotas para as outras etapas...
+```
+
+### Controller
+
+Certifique-se de que o controller `FormularioController` está assim:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function salvarEVoltar($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Views
+
+#### View `informacoes_pessoais`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Informações Pessoais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarInformacoesPessoais') ?>" method="post">
+            <input type="hidden" name="id" value="<?= isset($paciente['id']) ? $paciente['id'] : '' ?>">
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="<?= isset($paciente['nome']) ? $paciente['nome'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="data_nascimento">Data de Nascimento:</label>
+                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" value="<?= isset($paciente['data_nascimento']) ? $paciente['data_nascimento'] : '' ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="idade">Idade:</label>
+                <input type="text" class="form-control" id="idade" name="idade" value="<?= isset($paciente['data_nascimento']) ? (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y : '' ?>" readonly>
+            </div>
+            <div class="form-group text-right">
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('data_nascimento').addEventListener('change', function() {
+        var dataNascimento = new Date(this.value);
+        var hoje = new Date();
+        var idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        var mes = hoje.getMonth() - dataNascimento.getMonth();
+        if (mes < 0 || (mes === 0 && hoje.getDate() < dataNascimento.getDate())) {
+            idade--;
+        }
+        document.getElementById('idade').value = idade;
+    });
+</script>
+<?= $this->endSection() ?>
+```
+
+#### View `historico_medico`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/salvarEVoltar/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Verificação Final
+
+1. **Verifique os Logs**: Verifique os logs de erro para obter mais detalhes sobre o problema.
+2. **Verifique as Permissões**: Certifique-se de que as permissões das pastas e arquivos estão corretas.
+3. **Teste as Rotas**: Teste as rotas para garantir que estão funcionando conforme esperado.
+
+Se ainda estiver enfrentando problemas, por favor, compartilhe mais detalhes sobre a configuração do seu projeto para que eu possa ajudar melhor. 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/danfigueiredo/SuriEmu/tree/a3e3b337f4748aa7a3c4c244322aafa78128bec6/tabela_orcamento.php.
+
+----- 
+
+Aqui está o formulário 
+
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/salvarEVoltar/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+
+Aqui o método executado no controller:
+
+    public function salvarEVoltar($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+    }
+
+Estou debugando e o $data não está tranzendo os dados digitados.
+
+Pode me ajudar?
+
+Claro, vamos resolver isso juntos. O problema parece estar relacionado ao método HTTP usado pelo botão "Voltar". Atualmente, o botão "Voltar" está usando um link (`<a>`), que não envia os dados do formulário. Precisamos mudar isso para um botão que envie os dados do formulário via POST.
+
+### Ajuste na View `historico_medico`
+
+Vamos ajustar a view para que o botão "Voltar" envie os dados do formulário via POST:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Histórico Médico
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarHistoricoMedico/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="condicoes">Condições Médicas Preexistentes:</label>
+                <textarea class="form-control" id="condicoes" name="condicoes"><?= isset($paciente['condicoes']) ? $paciente['condicoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alergias">Alergias:</label>
+                <textarea class="form-control" id="alergias" name="alergias"><?= isset($paciente['alergias']) ? $paciente['alergias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="medicacoes">Medicações:</label>
+                <textarea class="form-control" id="medicacoes" name="medicacoes"><?= isset($paciente['medicacoes']) ? $paciente['medicacoes'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="cirurgias">Cirurgias:</label>
+                <textarea class="form-control" id="cirurgias" name="cirurgias"><?= isset($paciente['cirurgias']) ? $paciente['cirurgias'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="historico_familiar">Histórico Familiar:</label>
+                <textarea class="form-control" id="historico_familiar" name="historico_familiar"><?= isset($paciente['historico_familiar']) ? $paciente['historico_familiar'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Ajuste no Controller
+
+Vamos ajustar o método `salvarHistoricoMedico` no controller para lidar com a ação do botão "Voltar":
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Explicação das Alterações:
+
+1. **View `historico_medico`**:
+   - Substituí o link "Voltar" por um botão que envia o formulário via POST.
+   - Adicionei um atributo `name="action"` aos botões "Voltar" e "Próximo" para identificar qual ação foi acionada.
+
+2. **Controller**:
+   - No método `salvarHistoricoMedico`, verifiquei qual botão foi acionado (`voltar` ou `proximo`) e redirecionei para a página apropriada.
+
+Com essas alterações, os dados do formulário serão enviados corretamente ao clicar no botão "Voltar", e o campo digitado será salvo e carregado ao voltar para a tela de informações pessoais. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+
+Show, tudo está funcionando, então temos uma infra pra seguir adiante...
+
+Vamos para a etapa dos sintomas
+
+   - **Sintomas Atuais**: Sintomas, duração dos sintomas, intensidade dos sintomas, fatores.
+
+Vamos construir a view?
+
+Ótimo! Vamos construir a view para a etapa dos sintomas atuais. Esta view incluirá campos para sintomas, duração dos sintomas, intensidade dos sintomas e fatores.
+
+### View `sintomas_atuais`
+
+Aqui está o código para a view `sintomas_atuais`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Sintomas Atuais
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarSintomasAtuais/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="sintomas">Sintomas:</label>
+                <textarea class="form-control" id="sintomas" name="sintomas"><?= isset($paciente['sintomas']) ? $paciente['sintomas'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="duracao_sintomas">Duração dos Sintomas:</label>
+                <input type="text" class="form-control" id="duracao_sintomas" name="duracao_sintomas" value="<?= isset($paciente['duracao_sintomas']) ? $paciente['duracao_sintomas'] : '' ?>">
+            </div>
+            <div class="form-group">
+                <label for="intensidade_sintomas">Intensidade dos Sintomas:</label>
+                <input type="text" class="form-control" id="intensidade_sintomas" name="intensidade_sintomas" value="<?= isset($paciente['intensidade_sintomas']) ? $paciente['intensidade_sintomas'] : '' ?>">
+            </div>
+            <div class="form-group">
+                <label for="fatores">Fatores:</label>
+                <textarea class="form-control" id="fatores" name="fatores"><?= isset($paciente['fatores']) ? $paciente['fatores'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <a href="<?= site_url('formulario/historico_medico/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+                <button type="submit" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Ajuste no Controller
+
+Vamos adicionar os métodos necessários no controller para lidar com a etapa dos sintomas atuais:
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function sintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/sintomas_atuais', $data);
+    }
+
+    public function salvarSintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Rotas
+
+Certifique-se de que as rotas no arquivo `app/Config/Routes.php` estão configuradas corretamente:
+
+```php
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais/(:num)', 'FormularioController::index/$1');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+$routes->get('/formulario/salvarEVoltar/(:num)', 'FormularioController::salvarEVoltar/$1');
+$routes->get('/formulario/sintomas_atuais/(:num)', 'FormularioController::sintomasAtuais/$1');
+$routes->post('/formulario/salvarSintomasAtuais/(:num)', 'FormularioController::salvarSintomasAtuais/$1');
+// Continue adicionando rotas para as outras etapas...
+```
+
+### Explicação das Alterações:
+
+1. **View `sintomas_atuais`**:
+   - Inclui campos para sintomas, duração dos sintomas, intensidade dos sintomas e fatores.
+   - Botões "Voltar" e "Próximo" para navegação entre as etapas.
+
+2. **Controller**:
+   - **`sintomasAtuais`**: Carrega os dados do paciente e passa para a view `sintomas_atuais`.
+   - **`salvarSintomasAtuais`**: Salva os dados dos sintomas atuais e redireciona para a próxima etapa.
+
+3. **Rotas**:
+   - Adicionadas rotas para carregar e salvar os dados dos sintomas atuais.
+
+Com essas alterações, a etapa dos sintomas atuais deve estar pronta. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+
+Acho que podemos avançar, vamos à view:
+   - **Exames e Diagnósticos**: Exames, resultados, diagnósticos.
+
+Lembre-se da mecanica do botão voltar:
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+
+Perfeito! Vamos construir a view para a etapa de Exames e Diagnósticos, lembrando da mecânica do botão "Voltar".
+
+### View `exames_diagnosticos`
+
+Aqui está o código para a view `exames_diagnosticos`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Exames e Diagnósticos
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarExamesDiagnosticos/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="exames">Exames:</label>
+                <textarea class="form-control" id="exames" name="exames"><?= isset($paciente['exames']) ? $paciente['exames'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resultados">Resultados:</label>
+                <textarea class="form-control" id="resultados" name="resultados"><?= isset($paciente['resultados']) ? $paciente['resultados'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="diagnosticos">Diagnósticos:</label>
+                <textarea class="form-control" id="diagnosticos" name="diagnosticos"><?= isset($paciente['diagnosticos']) ? $paciente['diagnosticos'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Ajuste no Controller
+
+Vamos adicionar os métodos necessários no controller para lidar com a etapa de Exames e Diagnósticos, incluindo a mecânica do botão "Voltar":
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function sintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/sintomas_atuais', $data);
+    }
+
+    public function salvarSintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/historico_medico/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+    }
+
+    public function examesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/exames_diagnosticos', $data);
+    }
+
+    public function salvarExamesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/estilo_vida/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Rotas
+
+Certifique-se de que as rotas no arquivo `app/Config/Routes.php` estão configuradas corretamente:
+
+```php
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais/(:num)', 'FormularioController::index/$1');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+$routes->get('/formulario/salvarEVoltar/(:num)', 'FormularioController::salvarEVoltar/$1');
+$routes->get('/formulario/sintomas_atuais/(:num)', 'FormularioController::sintomasAtuais/$1');
+$routes->post('/formulario/salvarSintomasAtuais/(:num)', 'FormularioController::salvarSintomasAtuais/$1');
+$routes->get('/formulario/exames_diagnosticos/(:num)', 'FormularioController::examesDiagnosticos/$1');
+$routes->post('/formulario/salvarExamesDiagnosticos/(:num)', 'FormularioController::salvarExamesDiagnosticos/$1');
+// Continue adicionando rotas para as outras etapas...
+```
+
+### Explicação das Alterações:
+
+1. **View `exames_diagnosticos`**:
+   - Inclui campos para exames, resultados e diagnósticos.
+   - Botões "Voltar" e "Próximo" para navegação entre as etapas, com a mecânica correta para enviar os dados do formulário.
+
+2. **Controller**:
+   - **`examesDiagnosticos`**: Carrega os dados do paciente e passa para a view `exames_diagnosticos`.
+   - **`salvarExamesDiagnosticos`**: Salva os dados dos exames e diagnósticos e redireciona para a próxima etapa, ou volta para a etapa anterior se o botão "Voltar" for acionado.
+
+3. **Rotas**:
+   - Adicionadas rotas para carregar e salvar os dados dos exames e diagnósticos.
+
+Com essas alterações, a etapa de Exames e Diagnósticos deve estar pronta. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+
+Ótimo! Vamos construir a view para a etapa de Estilo de Vida. Esta view incluirá campos para hábitos alimentares, atividade física, consumo de álcool e tabaco.
+
+### View `estilo_vida`
+
+Aqui está o código para a view `estilo_vida`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Estilo de Vida
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarEstiloVida/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="habitos_alimentares">Hábitos Alimentares:</label>
+                <textarea class="form-control" id="habitos_alimentares" name="habitos_alimentares"><?= isset($paciente['habitos_alimentares']) ? $paciente['habitos_alimentares'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="atividade_fisica">Atividade Física:</label>
+                <textarea class="form-control" id="atividade_fisica" name="atividade_fisica"><?= isset($paciente['atividade_fisica']) ? $paciente['atividade_fisica'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="alcool">Consumo de Álcool:</label>
+                <textarea class="form-control" id="alcool" name="alcool"><?= isset($paciente['alcool']) ? $paciente['alcool'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="tabaco">Consumo de Tabaco:</label>
+                <textarea class="form-control" id="tabaco" name="tabaco"><?= isset($paciente['tabaco']) ? $paciente['tabaco'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Ajuste no Controller
+
+Vamos adicionar os métodos necessários no controller para lidar com a etapa de Estilo de Vida, incluindo a mecânica do botão "Voltar":
+
+```php
+<?php
+
+namespace App\Controllers;
+
+use App\Models\PacienteModel;
+
+class FormularioController extends BaseController
+{
+    public function index($id = null)
+    {
+        $model = new PacienteModel();
+        $data = [];
+
+        if ($id) {
+            $data['paciente'] = $model->find($id);
+        }
+
+        return view('formulario/informacoes_pessoais', $data);
+    }
+
+    public function salvarInformacoesPessoais()
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        
+        if (isset($data['id']) && !empty($data['id'])) {
+            $model->save($data);
+            $id = $data['id'];
+        } else {
+            $model->save($data);
+            $id = $model->insertID();
+        }
+
+        return redirect()->to(site_url('formulario/historico_medico/' . $id));
+    }
+
+    public function historicoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/historico_medico', $data);
+    }
+
+    public function salvarHistoricoMedico($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/informacoes_pessoais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+    }
+
+    public function sintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/sintomas_atuais', $data);
+    }
+
+    public function salvarSintomasAtuais($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/historico_medico/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+    }
+
+    public function examesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/exames_diagnosticos', $data);
+    }
+
+    public function salvarExamesDiagnosticos($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/sintomas_atuais/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/estilo_vida/' . $id));
+    }
+
+    public function estiloVida($id)
+    {
+        $model = new PacienteModel();
+        $data['paciente'] = $model->find($id);
+
+        return view('formulario/estilo_vida', $data);
+    }
+
+    public function salvarEstiloVida($id)
+    {
+        $model = new PacienteModel();
+        $data = $this->request->getPost();
+        $data['id'] = $id;
+        $model->save($data);
+
+        if ($this->request->getPost('action') === 'voltar') {
+            return redirect()->to(site_url('formulario/exames_diagnosticos/' . $id));
+        }
+
+        return redirect()->to(site_url('formulario/notas_plano_tratamento/' . $id));
+    }
+
+    // Continue com os outros métodos para cada etapa...
+}
+```
+
+### Ajuste nas Rotas
+
+Certifique-se de que as rotas no arquivo `app/Config/Routes.php` estão configuradas corretamente:
+
+```php
+$routes->get('/', 'Home::index');
+
+$routes->get('/formulario', 'FormularioController::index');
+$routes->get('/formulario/informacoes_pessoais/(:num)', 'FormularioController::index/$1');
+$routes->post('/formulario/salvarInformacoesPessoais', 'FormularioController::salvarInformacoesPessoais');
+$routes->get('/formulario/historico_medico/(:num)', 'FormularioController::historicoMedico/$1');
+$routes->post('/formulario/salvarHistoricoMedico/(:num)', 'FormularioController::salvarHistoricoMedico/$1');
+$routes->get('/formulario/salvarEVoltar/(:num)', 'FormularioController::salvarEVoltar/$1');
+$routes->get('/formulario/sintomas_atuais/(:num)', 'FormularioController::sintomasAtuais/$1');
+$routes->post('/formulario/salvarSintomasAtuais/(:num)', 'FormularioController::salvarSintomasAtuais/$1');
+$routes->get('/formulario/exames_diagnosticos/(:num)', 'FormularioController::examesDiagnosticos/$1');
+$routes->post('/formulario/salvarExamesDiagnosticos/(:num)', 'FormularioController::salvarExamesDiagnosticos/$1');
+$routes->get('/formulario/estilo_vida/(:num)', 'FormularioController::estiloVida/$1');
+$routes->post('/formulario/salvarEstiloVida/(:num)', 'FormularioController::salvarEstiloVida/$1');
+// Continue adicionando rotas para as outras etapas...
+```
+
+### Explicação das Alterações:
+
+1. **View `estilo_vida`**:
+   - Inclui campos para hábitos alimentares, atividade física, consumo de álcool e tabaco.
+   - Botões "Voltar" e "Próximo" para navegação entre as etapas, com a mecânica correta para enviar os dados do formulário.
+
+2. **Controller**:
+   - **`estiloVida`**: Carrega os dados do paciente e passa para a view `estilo_vida`.
+   - **`salvarEstiloVida`**: Salva os dados do estilo de vida e redireciona para a próxima etapa, ou volta para a etapa anterior se o botão "Voltar" for acionado.
+
+3. **Rotas**:
+   - Adicionadas rotas para carregar e salvar os dados do estilo de vida.
+
+Com essas alterações, a etapa de Estilo de Vida deve estar pronta. Se
+
+----- 
+
+Vamos implementar:
+
+   - **Notas e Plano de Tratamento**: Notas, plano de tratamento, próximas consultas, consentimento.
+
+Lembre-se da mecanica do botão voltar:
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+
+No caso do controller, mostre-me apenas os novos métodos.
+No caso das rotas, mostre-me apenas as novas rotas
+
+Claro! Vamos implementar a etapa de Notas e Plano de Tratamento.
+
+### View `notas_plano_tratamento`
+
+Aqui está o código para a view `notas_plano_tratamento`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Notas e Plano de Tratamento
+    </div>
+    <div class="card-body">
+        <form action="<?= site_url('formulario/salvarNotasPlanoTratamento/' . $paciente['id']) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $paciente['id'] ?>">
+            <div class="form-group">
+                <label for="notas">Notas:</label>
+                <textarea class="form-control" id="notas" name="notas"><?= isset($paciente['notas']) ? $paciente['notas'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="plano_tratamento">Plano de Tratamento:</label>
+                <textarea class="form-control" id="plano_tratamento" name="plano_tratamento"><?= isset($paciente['plano_tratamento']) ? $paciente['plano_tratamento'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="proximas_consultas">Próximas Consultas:</label>
+                <textarea class="form-control" id="proximas_consultas" name="proximas_consultas"><?= isset($paciente['proximas_consultas']) ? $paciente['proximas_consultas'] : '' ?></textarea>
+            </div>
+            <div class="form-group">
+                <label for="consentimento">Consentimento:</label>
+                <textarea class="form-control" id="consentimento" name="consentimento"><?= isset($paciente['consentimento']) ? $paciente['consentimento'] : '' ?></textarea>
+            </div>
+            <div class="form-group d-flex justify-content-between">
+                <button type="submit" name="action" value="voltar" class="btn btn-secondary">Voltar</button>
+                <button type="submit" name="action" value="proximo" class="btn btn-primary">Próximo</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Novos Métodos no Controller
+
+Aqui estão os novos métodos no controller para lidar com a etapa de Notas e Plano de Tratamento:
+
+```php
+public function notasPlanoTratamento($id)
+{
+    $model = new PacienteModel();
+    $data['paciente'] = $model->find($id);
+
+    return view('formulario/notas_plano_tratamento', $data);
+}
+
+public function salvarNotasPlanoTratamento($id)
+{
+    $model = new PacienteModel();
+    $data = $this->request->getPost();
+    $data['id'] = $id;
+    $model->save($data);
+
+    if ($this->request->getPost('action') === 'voltar') {
+        return redirect()->to(site_url('formulario/estilo_vida/' . $id));
+    }
+
+    // Redirecionar para a próxima etapa ou página final
+    return redirect()->to(site_url('formulario/final/' . $id));
+}
+```
+
+### Novas Rotas
+
+Aqui estão as novas rotas no arquivo `app/Config/Routes.php`:
+
+```php
+$routes->get('/formulario/notas_plano_tratamento/(:num)', 'FormularioController::notasPlanoTratamento/$1');
+$routes->post('/formulario/salvarNotasPlanoTratamento/(:num)', 'FormularioController::salvarNotasPlanoTratamento/$1');
+```
+
+### Explicação das Alterações:
+
+1. **View `notas_plano_tratamento`**:
+   - Inclui campos para notas, plano de tratamento, próximas consultas e consentimento.
+   - Botões "Voltar" e "Próximo" para navegação entre as etapas, com a mecânica correta para enviar os dados do formulário.
+
+2. **Controller**:
+   - **`notasPlanoTratamento`**: Carrega os dados do paciente e passa para a view `notas_plano_tratamento`.
+   - **`salvarNotasPlanoTratamento`**: Salva os dados das notas e plano de tratamento e redireciona para a próxima etapa, ou volta para a etapa anterior se o botão "Voltar" for acionado.
+
+3. **Rotas**:
+   - Adicionadas rotas para carregar e salvar os dados das notas e plano de tratamento.
+
+Com essas alterações, a etapa de Notas e Plano de Tratamento deve estar pronta. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+
+Não pensei no final direito... O que você sugere?
+
+Para finalizar o fluxo do formulário, podemos criar uma página de confirmação ou resumo onde o usuário pode revisar todas as informações inseridas antes de finalizar o processo. Isso ajuda a garantir que todos os dados estejam corretos e permite ao usuário fazer ajustes finais, se necessário.
+
+### Página de Confirmação
+
+Vamos criar uma view de confirmação que exibe todas as informações coletadas e permite ao usuário confirmar ou voltar para editar qualquer etapa.
+
+#### View `confirmacao`
+
+Aqui está o código para a view `confirmacao`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Confirmação
+    </div>
+    <div class="card-body">
+        <h5>Informações Pessoais</h5>
+        <p><strong>Nome:</strong> <?= $paciente['nome'] ?></p>
+        <p><strong>Data de Nascimento:</strong> <?= $paciente['data_nascimento'] ?></p>
+        <p><strong>Idade:</strong> <?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></p>
+
+        <h5>Histórico Médico</h5>
+        <p><strong>Condições Médicas Preexistentes:</strong> <?= $paciente['condicoes'] ?></p>
+        <p><strong>Alergias:</strong> <?= $paciente['alergias'] ?></p>
+        <p><strong>Medicações:</strong> <?= $paciente['medicacoes'] ?></p>
+        <p><strong>Cirurgias:</strong> <?= $paciente['cirurgias'] ?></p>
+        <p><strong>Histórico Familiar:</strong> <?= $paciente['historico_familiar'] ?></p>
+
+        <h5>Sintomas Atuais</h5>
+        <p><strong>Sintomas:</strong> <?= $paciente['sintomas'] ?></p>
+        <p><strong>Duração dos Sintomas:</strong> <?= $paciente['duracao_sintomas'] ?></p>
+        <p><strong>Intensidade dos Sintomas:</strong> <?= $paciente['intensidade_sintomas'] ?></p>
+        <p><strong>Fatores:</strong> <?= $paciente['fatores'] ?></p>
+
+        <h5>Exames e Diagnósticos</h5>
+        <p><strong>Exames:</strong> <?= $paciente['exames'] ?></p>
+        <p><strong>Resultados:</strong> <?= $paciente['resultados'] ?></p>
+        <p><strong>Diagnósticos:</strong> <?= $paciente['diagnosticos'] ?></p>
+
+        <h5>Estilo de Vida</h5>
+        <p><strong>Hábitos Alimentares:</strong> <?= $paciente['habitos_alimentares'] ?></p>
+        <p><strong>Atividade Física:</strong> <?= $paciente['atividade_fisica'] ?></p>
+        <p><strong>Consumo de Álcool:</strong> <?= $paciente['alcool'] ?></p>
+        <p><strong>Consumo de Tabaco:</strong> <?= $paciente['tabaco'] ?></p>
+
+        <h5>Notas e Plano de Tratamento</h5>
+        <p><strong>Notas:</strong> <?= $paciente['notas'] ?></p>
+        <p><strong>Plano de Tratamento:</strong> <?= $paciente['plano_tratamento'] ?></p>
+        <p><strong>Próximas Consultas:</strong> <?= $paciente['proximas_consultas'] ?></p>
+        <p><strong>Consentimento:</strong> <?= $paciente['consentimento'] ?></p>
+
+        <div class="form-group d-flex justify-content-between">
+            <a href="<?= site_url('formulario/notas_plano_tratamento/' . $paciente['id']) ?>" class="btn btn-secondary">Voltar</a>
+            <a href="<?= site_url('formulario/finalizar/' . $paciente['id']) ?>" class="btn btn-primary">Confirmar</a>
+        </div>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Novos Métodos no Controller
+
+Aqui estão os novos métodos no controller para lidar com a página de confirmação e finalização:
+
+```php
+public function confirmacao($id)
+{
+    $model = new PacienteModel();
+    $data['paciente'] = $model->find($id);
+
+    return view('formulario/confirmacao', $data);
+}
+
+public function finalizar($id)
+{
+    // Aqui você pode adicionar lógica para finalizar o processo, como enviar um e-mail de confirmação, gerar um relatório, etc.
+    return redirect()->to(site_url('formulario/sucesso'));
+}
+
+public function sucesso()
+{
+    return view('formulario/sucesso');
+}
+```
+
+### Novas Rotas
+
+Aqui estão as novas rotas no arquivo `app/Config/Routes.php`:
+
+```php
+$routes->get('/formulario/confirmacao/(:num)', 'FormularioController::confirmacao/$1');
+$routes->get('/formulario/finalizar/(:num)', 'FormularioController::finalizar/$1');
+$routes->get('/formulario/sucesso', 'FormularioController::sucesso');
+```
+
+### Página de Sucesso
+
+Vamos criar uma página de sucesso para exibir uma mensagem de confirmação após a finalização do processo.
+
+#### View `sucesso`
+
+Aqui está o código para a view `sucesso`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Sucesso
+    </div>
+    <div class="card-body">
+        <h5>Processo Finalizado com Sucesso!</h5>
+        <p>Obrigado por fornecer todas as informações. Seu registro foi concluído com sucesso.</p>
+        <a href="<?= site_url('/') ?>" class="btn btn-primary">Voltar para a Página Inicial</a>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **View `confirmacao`**:
+   - Exibe todas as informações coletadas para revisão.
+   - Botões "Voltar" para editar informações e "Confirmar" para finalizar o processo.
+
+2. **Controller**:
+   - **`confirmacao`**: Carrega os dados do paciente e passa para a view `confirmacao`.
+   - **`finalizar`**: Lida com a finalização do processo e redireciona para a página de sucesso.
+   - **`sucesso`**: Exibe uma mensagem de confirmação após a finalização do processo.
+
+3. **Rotas**:
+   - Adicionadas rotas para carregar a página de confirmação, finalizar o processo e exibir a página de sucesso.
+
+Com essas alterações, o fluxo do formulário deve estar completo, incluindo uma página de confirmação e uma página de sucesso. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+vamos construir uma pagina para listar os pacientes?
+
+Vamos listar apenas o nome, nascimento, idade (tem que ser calculada), e tem que ter um link para as informações pessoais.
+
+Claro! Vamos construir uma página para listar os pacientes com as informações solicitadas.
+
+### View `listar_pacientes`
+
+Aqui está o código para a view `listar_pacientes`:
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header">
+        Lista de Pacientes
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= $paciente['data_nascimento'] ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Método no Controller
+
+Vamos adicionar um método no controller para carregar a lista de pacientes e passar para a view:
+
+```php
+public function listarPacientes()
+{
+    $model = new PacienteModel();
+    $data['pacientes'] = $model->findAll();
+
+    return view('formulario/listar_pacientes', $data);
+}
+```
+
+### Nova Rota
+
+Aqui está a nova rota no arquivo `app/Config/Routes.php`:
+
+```php
+$routes->get('/formulario/listar_pacientes', 'FormularioController::listarPacientes');
+```
+
+### Explicação das Alterações:
+
+1. **View `listar_pacientes`**:
+   - Exibe uma tabela com o nome, data de nascimento e idade dos pacientes.
+   - Inclui um link para visualizar as informações pessoais de cada paciente.
+
+2. **Controller**:
+   - **`listarPacientes`**: Carrega a lista de pacientes e passa para a view `listar_pacientes`.
+
+3. **Rota**:
+   - Adicionada rota para carregar a página de listagem de pacientes.
+
+Com essas alterações, você terá uma página para listar os pacientes com as informações solicitadas e um link para visualizar as informações pessoais de cada paciente. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+Fonte: conversa com o Copilot, 11/08/2024
+(1) github.com. https://github.com/leopelegrini/codeigniter-clinica-medica/tree/75fdbf3997d711e596e46a413b0db07f5a16081b/app%2FViews%2Fpacientes%2Findex.php.
+
+----- 
+
+Nessa página vamos colocar um botão "Novo Paciente" que vai para a tela de informações pessoais para cadastro de novo paciente
+
+
+Ótima ideia! Vamos adicionar um botão "Novo Paciente" na página de listagem de pacientes que redireciona para a tela de informações pessoais para cadastrar um novo paciente.
+
+### View `listar_pacientes`
+
+Aqui está o código atualizado para a view `listar_pacientes` com o botão "Novo Paciente":
+
+```php
+<?= $this->extend('layouts/main') ?>
+
+<?= $this->section('content') ?>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Pacientes</span>
+        <a href="<?= site_url('formulario/informacoes_pessoais') ?>" class="btn btn-success">Novo Paciente</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Data de Nascimento</th>
+                    <th>Idade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pacientes as $paciente): ?>
+                    <tr>
+                        <td><?= $paciente['nome'] ?></td>
+                        <td><?= $paciente['data_nascimento'] ?></td>
+                        <td><?= (new DateTime())->diff(new DateTime($paciente['data_nascimento']))->y ?></td>
+                        <td>
+                            <a href="<?= site_url('formulario/informacoes_pessoais/' . $paciente['id']) ?>" class="btn btn-primary">Ver Informações</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?= $this->endSection() ?>
+```
+
+### Explicação das Alterações:
+
+1. **Botão "Novo Paciente"**:
+   - Adicionado um botão "Novo Paciente" na parte superior da página de listagem de pacientes.
+   - O botão redireciona para a tela de informações pessoais para cadastrar um novo paciente.
+
+Com essa alteração, a página de listagem de pacientes agora inclui um botão "Novo Paciente" que facilita o cadastro de novos pacientes. Se precisar de mais alguma coisa ou tiver outras dúvidas, estou à disposição! 😊
+
+----- 
+
+http://localhost/websaraiva/formulario/informacoes_pessoais está dando 404
