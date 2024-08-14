@@ -1,0 +1,278 @@
+curl https://api.openai.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -d '{
+    "model": "gpt-4o-mini-2024-07-18",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a compassionate and knowledgeable general practitioner. You provide clear, accurate, and empathetic advice on health-related questions, always prioritizing the well-being and understanding of the patient. When uncertain, you recommend consulting a healthcare professional in person."
+      },
+      {
+        "role": "user",
+        "content": "Hello!"
+      }
+    ]
+  }'
+
+
+<?php
+
+$curl = curl_init();
+
+curl_setopt_array($curl, array(
+  CURLOPT_URL => 'https://api.openai.com/v1/chat/completions',
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => '',
+  CURLOPT_MAXREDIRS => 10,
+  CURLOPT_TIMEOUT => 0,
+  CURLOPT_FOLLOWLOCATION => true,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => 'POST',
+    CURLOPT_POSTFIELDS => '{
+        "model": "gpt-4o-mini-2024-07-18",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a compassionate and knowledgeable general practitioner.\n
+                            You provide clear, accurate, and empathetic advice on health-related questions,\n
+                            always prioritizing the well-being and understanding of the patient.\n
+                            When uncertain, you recommend consulting a healthcare professional in person."
+            },
+            {
+                "role": "user",
+                "content": "Hello!"
+            }
+        ]
+    }',
+  CURLOPT_HTTPHEADER => array(
+    'Content-Type: application/json',
+    'Authorization: Bearer $OPENAI_API_KEY'
+  ),
+));
+
+$response = curl_exec($curl);
+
+curl_close($curl);
+echo $response;
+
+----- 
+
+Se eu quisesse que o chat me responda de forma útil e prestativa imitando um médico clínico geral eu deveria definir a role system de que modo. me sugira algo bem útil.
+
+Para fazer com que o ChatGPT responda de forma útil e prestativa, imitando um médico clínico geral, você pode definir a *role* `system` da seguinte maneira:
+
+```json
+{
+  "role": "system",
+  "content": "You are a compassionate and knowledgeable general practitioner. You provide clear, accurate, and empathetic advice on health-related questions, always prioritizing the well-being and understanding of the patient. When uncertain, you recommend consulting a healthcare professional in person."
+}
+```
+
+Essa configuração fará com que o modelo aja como um médico clínico geral, oferecendo conselhos de saúde de maneira cuidadosa e informada, ao mesmo tempo que sugere a consulta presencial com um profissional de saúde quando necessário.
+
+
+
+
+
+-----
+
+Você pode fazer essas substituições no código de maneira simples. Aqui está o código atualizado conforme solicitado:
+
+```php
+namespace App\Utils;
+
+class ChatGPTUtil
+{
+    protected $apiKey;
+
+    public function __construct()
+    {
+        $this->apiKey = getenv('OPENAI_API_KEY'); // Carregar a chave de API de uma variável de ambiente
+    }
+
+    public function callApi($data)
+    {
+        $curl = curl_init();
+
+        $postData = json_encode([
+            "model" => "gpt-4o-mini-2024-07-18",
+            "messages" => [
+                [
+                    "role" => "system",
+                    "content" => "You are a compassionate and knowledgeable general practitioner.\n
+                                  You provide clear, accurate, and empathetic advice on health-related questions,\n
+                                  always prioritizing the well-being and understanding of the patient.\n
+                                  When uncertain, you recommend consulting a healthcare professional in person."
+                ],
+                [
+                    "role" => "user",
+                    "content" => $data
+                ]
+            ]
+        ]);
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.openai.com/v1/chat/completions',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        return json_decode($response, true);
+    }
+}
+```
+
+### O que foi alterado:
+
+1. **Substituição de `$OPENAI_API_KEY`**:
+   - No cabeçalho `Authorization`, a chave de API foi substituída pela variável de instância `$this->apiKey`.
+
+   ```php
+   'Authorization: Bearer ' . $this->apiKey
+   ```
+
+2. **Uso do `$data` recebido no método `callApi`**:
+   - O conteúdo da *role* `user` foi substituído pelo valor da variável `$data`.
+
+   ```php
+   "content" => $data
+   ```
+
+### Resultado:
+Agora, o código usa a chave de API armazenada na variável de instância `$this->apiKey` e o conteúdo passado na chamada ao método `callApi` é usado no campo `content` da *role* `user`.
+
+
+----- 
+
+Aqui estão exemplos de como você pode chamar a função `callApi` da classe `ChatGPTUtil` em diferentes controllers da sua aplicação CodeIgniter 4.
+
+### Exemplo 1: Chamando `callApi` em um Controller Simples
+
+```php
+namespace App\Controllers;
+
+use App\Utils\ChatGPTUtil;
+
+class ChatController extends BaseController
+{
+    public function index()
+    {
+        // Instancia a classe utilitária
+        $chatGPTUtil = new ChatGPTUtil();
+
+        // Dados que serão enviados como entrada do usuário para a API
+        $userMessage = "What are the symptoms of the flu?";
+
+        // Faz a chamada à API utilizando o método callApi
+        $response = $chatGPTUtil->callApi($userMessage);
+
+        // Exibe a resposta da API (apenas para fins de demonstração)
+        echo "<pre>";
+        print_r($response);
+        echo "</pre>";
+    }
+}
+```
+
+### Exemplo 2: Usando `callApi` dentro de um Controller para Processar uma Requisição POST
+
+```php
+namespace App\Controllers;
+
+use App\Utils\ChatGPTUtil;
+
+class HealthController extends BaseController
+{
+    public function diagnose()
+    {
+        // Verifica se a requisição é do tipo POST
+        if ($this->request->getMethod() === 'post') {
+            // Obtém a entrada do usuário a partir de um campo de formulário
+            $userMessage = $this->request->getPost('symptoms');
+
+            // Instancia a classe utilitária
+            $chatGPTUtil = new ChatGPTUtil();
+
+            // Faz a chamada à API utilizando o método callApi
+            $response = $chatGPTUtil->callApi($userMessage);
+
+            // Passa a resposta para a visualização (view)
+            return view('diagnose_result', ['response' => $response]);
+        }
+
+        // Caso não seja uma requisição POST, exibe o formulário
+        return view('diagnose_form');
+    }
+}
+```
+
+### Exemplo 3: Usando `callApi` para Logar e Tratar Erros em um Controller
+
+```php
+namespace App\Controllers;
+
+use App\Utils\ChatGPTUtil;
+use CodeIgniter\HTTP\Exceptions\HTTPException;
+
+class MedicalAdviceController extends BaseController
+{
+    public function getAdvice()
+    {
+        try {
+            // Dados de entrada do usuário
+            $userMessage = "I'm experiencing headaches and nausea. What should I do?";
+
+            // Instancia a classe utilitária
+            $chatGPTUtil = new ChatGPTUtil();
+
+            // Faz a chamada à API utilizando o método callApi
+            $response = $chatGPTUtil->callApi($userMessage);
+
+            // Verifica se a resposta contém algum erro
+            if (isset($response['error'])) {
+                throw new HTTPException($response['error']['message']);
+            }
+
+            // Exibe a resposta
+            return view('medical_advice', ['response' => $response]);
+
+        } catch (\Exception $e) {
+            // Em caso de erro, loga a mensagem e exibe uma página de erro
+            log_message('error', 'Erro ao obter conselho médico: ' . $e->getMessage());
+            return view('error_page', ['message' => 'An error occurred while getting medical advice. Please try again later.']);
+        }
+    }
+}
+```
+
+### Explicação:
+
+1. **Instanciando `ChatGPTUtil`:** 
+   - Em cada exemplo, a classe `ChatGPTUtil` é instanciada para utilizar o método `callApi`.
+   - `new ChatGPTUtil()` é usado para criar uma instância dessa classe.
+
+2. **Passando Dados para a API:**
+   - O conteúdo do usuário (mensagem) é passado para o método `callApi`, que em seguida faz a requisição à API do ChatGPT.
+
+3. **Manipulação de Resposta:**
+   - A resposta da API é manipulada e, dependendo do caso, exibida diretamente, passada para uma view, ou tratada para exibir uma mensagem de erro.
+
+4. **Tratamento de Erros:**
+   - No terceiro exemplo, um bloco `try-catch` é usado para capturar e tratar possíveis erros na chamada à API, garantindo que a aplicação possa lidar com falhas de forma elegante.
+
+Esses exemplos mostram como integrar a chamada à API em diferentes cenários de controllers na sua aplicação CodeIgniter 4.
