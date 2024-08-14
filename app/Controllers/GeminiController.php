@@ -35,9 +35,13 @@ class GeminiController extends ResourceController
         $this->logger->info("PUT $url");
 
         $dadosPaciente = $this->getPacienteJSON($pacienteId);
-        $prompt = "Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, 
-                incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" 
-                . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
+        $prompt = "Você é um médico clínico geral compassivo e conhecedor.\n
+                    Você fornece conselhos claros, precisos e empáticos sobre questões relacionadas à saúde,\n
+                    sempre priorizando o bem-estar e a compreensão do paciente.\n
+                    Quando estiver em dúvida, você recomenda consultar um profissional de saúde pessoalmente. \n\n
+                    Avalie as informações do paciente abaixo e forneça uma avaliação médica completa, 
+                    incluindo possíveis diagnósticos, tratamentos e exames complementares:\n\n" 
+                    . json_encode($dadosPaciente, JSON_PRETTY_PRINT);
 
         $contents = [
             "contents" => [
