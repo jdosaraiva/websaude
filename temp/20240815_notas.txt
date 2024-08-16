@@ -1,0 +1,88 @@
+{
+    "nome": "Paciente_66ba78e48f03b",
+    "data_nascimento": "1985-08-15",
+    "sexo": "Masculino",
+    "historico_medico": {
+        "condicoes": "Hipertensão leve",
+        "alergias": "Nenhuma conhecida",
+        "medicacoes": "Losartana 50mg (uma vez ao dia)",
+        "cirurgias": "Apendicectomia (2010)",
+        "historico_familiar": "Pai com diabetes tipo 2, mãe com hipertensão"
+    },
+    "sintomas_atuais": {
+        "sintomas": "Fadiga, dor de cabeça, ganho de peso",
+        "duracao_sintomas": "3 meses",
+        "intensidade_sintomas": "0",
+        "fatores": "Estresse no trabalho, má alimentação"
+    },
+    "exames_diagnosticos": {
+        "exames": "Hemograma completo, glicemia de jejum, perfil lipídico",
+        "resultados": "Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado",
+        "diagnosticos": "Pré-diabetes, dislipidemia"
+    },
+    "estilo_vida": {
+        "habitos_alimentares": "Consumo frequente de fast food, baixo consumo de frutas e vegetais",
+        "atividade_fisica": "Sedentário, raramente pratica exercícios",
+        "alcool": "Socialmente, cerca de 2-3 vezes por semana",
+        "tabaco": "Não fuma"
+    },
+    "notas_plano_tratamento": {
+        "notas": "Paciente precisa melhorar hábitos alimentares e aumentar atividade física",
+        "plano_tratamento": "Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista",
+        "proximas_consultas": "Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês",
+        "consentimento": "Consentimento dado para tratamento e compartilhamento de informações médicas"
+    }
+}
+
+
+{
+    "model": "sabia-3",
+    "do_sample": true,
+    "max_tokens": 2000,
+    "temperature": 0.4,
+    "top_p": 0.95,
+    "messages": [
+        {
+            "role": "system",
+            "content": "Você é um médico clínico geral compassivo e conhecedor.\n\r\n                    Você fornece conselhos claros, precisos e empáticos sobre questões relacionadas à saúde,\n\r\n                    sempre priorizando o bem-estar e a compreensão do paciente.\n\r\n                    Quando estiver em dúvida, você recomenda consultar um profissional de saúde pessoalmente."
+        },
+        {
+            "role": "user",
+            "content": {
+                "nome": "Paciente_66ba78e48f03b",
+                "data_nascimento": "1985-08-15",
+                "sexo": "Masculino",
+                "historico_medico": {
+                    "condicoes": "Hipertensão leve",
+                    "alergias": "Nenhuma conhecida",
+                    "medicacoes": "Losartana 50mg (uma vez ao dia)",
+                    "cirurgias": "Apendicectomia (2010)",
+                    "historico_familiar": "Pai com diabetes tipo 2, mãe com hipertensão"
+                },
+                "sintomas_atuais": {
+                    "sintomas": "Fadiga, dor de cabeça, ganho de peso",
+                    "duracao_sintomas": "3 meses",
+                    "intensidade_sintomas": "0",
+                    "fatores": "Estresse no trabalho, má alimentação"
+                },
+                "exames_diagnosticos": {
+                    "exames": "Hemograma completo, glicemia de jejum, perfil lipídico",
+                    "resultados": "Hemograma normal, glicemia de jejum 110 mg/dL (pré-diabetes), colesterol LDL elevado",
+                    "diagnosticos": "Pré-diabetes, dislipidemia"
+                },
+                "estilo_vida": {
+                    "habitos_alimentares": "Consumo frequente de fast food, baixo consumo de frutas e vegetais",
+                    "atividade_fisica": "Sedentário, raramente pratica exercícios",
+                    "alcool": "Socialmente, cerca de 2-3 vezes por semana",
+                    "tabaco": "Não fuma"
+                },
+                "notas_plano_tratamento": {
+                    "notas": "Paciente precisa melhorar hábitos alimentares e aumentar atividade física",
+                    "plano_tratamento": "Dieta balanceada, iniciar caminhada diária de 30 minutos, acompanhamento com nutricionista",
+                    "proximas_consultas": "Consulta com nutricionista em 2 semanas, retorno ao médico em 1 mês",
+                    "consentimento": "Consentimento dado para tratamento e compartilhamento de informações médicas"
+                }
+            }
+        }
+    ]
+}

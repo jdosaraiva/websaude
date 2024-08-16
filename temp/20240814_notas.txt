@@ -276,3 +276,126 @@ class MedicalAdviceController extends BaseController
    - No terceiro exemplo, um bloco `try-catch` é usado para capturar e tratar possíveis erros na chamada à API, garantindo que a aplicação possa lidar com falhas de forma elegante.
 
 Esses exemplos mostram como integrar a chamada à API em diferentes cenários de controllers na sua aplicação CodeIgniter 4.
+
+----- 
+Você pode modificar a classe `ChatGPTUtil` para logar a resposta da API conforme solicitado e retornar o array com o status e a mensagem. Aqui está o código atualizado:
+
+```php
+namespace App\Utils;
+
+use Config\Services; // Importa o serviço de logging
+
+class ChatGPTUtil
+{
+    protected $apiKey;
+    protected $logger;
+
+    public function __construct()
+    {
+        $this->apiKey = getenv('OPENAI_API_KEY'); // Carregar a chave de API de uma variável de ambiente
+        $this->logger = Services::logger(); // Inicializa o logger
+    }
+
+    public function callApi($data)
+    {
+        $this->logger->info("Chamando a API do ChatGPT com o conteúdo: " . $data);
+
+        $curl = curl_init();
+
+        $postData = json_encode([
+            "model" => "gpt-4o-mini-2024-07-18",
+            "messages" => [
+                [
+                    "role" => "system",
+                    "content" => "You are a compassionate and knowledgeable general practitioner.\n
+                                  You provide clear, accurate, and empathetic advice on health-related questions,\n
+                                  always prioritizing the well-being and understanding of the patient.\n
+                                  When uncertain, you recommend consulting a healthcare professional in person."
+                ],
+                [
+                    "role" => "user",
+                    "content" => $data
+                ]
+            ]
+        ]);
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.openai.com/v1/chat/completions',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $postData,
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $this->apiKey
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        if (curl_errno($curl)) {
+            $this->logger->error("Erro ao chamar a API: " . curl_error($curl));
+            curl_close($curl);
+            return [
+                'status' => 'ERROR',
+                'message' => 'Failed to call API',
+            ];
+        }
+
+        curl_close($curl);
+
+        // Decodifica a resposta JSON
+        $decodedResponse = json_decode($response, true);
+
+        // Loga a resposta completa em uma única linha
+        $this->logger->info("Resposta da API: " . json_encode($decodedResponse));
+
+        // Loga o campo 'usage' especificamente
+        if (isset($decodedResponse['usage'])) {
+            $this->logger->info("Usage: " . json_encode($decodedResponse['usage']));
+        }
+
+        // Extrai o conteúdo da resposta do assistant
+        $messageContent = $decodedResponse['choices'][0]['message']['content'] ?? 'No content available';
+
+        // Retorna o array com o status e a mensagem
+        return [
+            'status' => 'OK',
+            'message' => $messageContent
+        ];
+    }
+}
+```
+
+### Explicação das Modificações:
+
+1. **Logando a Resposta Completa:**
+   - A resposta da API é decodificada para um array associativo usando `json_decode`.
+   - A resposta completa é logada em uma única linha usando `json_encode` para convertê-la de volta em uma string JSON.
+
+   ```php
+   $this->logger->info("Resposta da API: " . json_encode($decodedResponse));
+   ```
+
+2. **Logando o Campo `usage`:**
+   - O campo `usage` é logado especificamente se estiver presente na resposta.
+
+   ```php
+   if (isset($decodedResponse['usage'])) {
+       $this->logger->info("Usage: " . json_encode($decodedResponse['usage']));
+   }
+   ```
+
+3. **Retornando o Array com o Status e a Mensagem:**
+   - A mensagem retornada pela API (`content` do `assistant`) é extraída e retornada junto com o status `"OK"`.
+
+   ```php
+   return [
+       'status' => 'OK',
+       'message' => $messageContent
+   ];
+   ```

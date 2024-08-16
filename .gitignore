@@ -21,6 +21,9 @@
 **/writable/tmp/*
 !**/writable/tmp/index.html
 
+# Ignorar arquivos debug
+**/writable/debugbar/*
+
 # Ignorar arquivos de build do usuário
 user_guide_src/build/*
 user_guide_src/cilexer/build/*

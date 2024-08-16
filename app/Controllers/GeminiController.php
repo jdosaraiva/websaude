@@ -8,10 +8,12 @@ use App\Models\PacienteModel;
 class GeminiController extends ResourceController
 {
     protected $apiKey;
+    protected $pacienteModel;
 
     public function __construct()
     {
         $this->apiKey = getenv('GEMINI_API_KEY'); // Carregar a chave de API de uma variável de ambiente
+        $this->pacienteModel = new PacienteModel(); // Instancia o model
     }
 
     public function viewEvaluation($pacienteId)
@@ -34,7 +36,7 @@ class GeminiController extends ResourceController
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $this->apiKey;
         $this->logger->info("PUT $url");
 
-        $dadosPaciente = $this->getPacienteJSON($pacienteId);
+        $dadosPaciente = $this->pacienteModel->getPacienteJSON($pacienteId);
         $prompt = "Você é um médico clínico geral compassivo e conhecedor.\n
                     Você fornece conselhos claros, precisos e empáticos sobre questões relacionadas à saúde,\n
                     sempre priorizando o bem-estar e a compreensão do paciente.\n
@@ -124,53 +126,4 @@ class GeminiController extends ResourceController
         // Retorna os dados de resposta
         return $data;
     }
-
-    public function getPacienteJSON($id)
-    {
-        $pacienteModel = new PacienteModel();
-        $paciente = $pacienteModel->find($id);
-
-        if (!$paciente) {
-            throw new \Exception('Paciente não encontrado');
-        }
-
-        $dadosPaciente = [
-            'nome' => $paciente['nome'],
-            'data_nascimento' => $paciente['data_nascimento'],
-            'sexo' => $paciente['sexo'],
-            'historico_medico' => [
-                'condicoes' => $paciente['condicoes'],
-                'alergias' => $paciente['alergias'],
-                'medicacoes' => $paciente['medicacoes'],
-                'cirurgias' => $paciente['cirurgias'],
-                'historico_familiar' => $paciente['historico_familiar']
-            ],
-            'sintomas_atuais' => [
-                'sintomas' => $paciente['sintomas'],
-                'duracao_sintomas' => $paciente['duracao_sintomas'],
-                'intensidade_sintomas' => $paciente['intensidade_sintomas'],
-                'fatores' => $paciente['fatores']
-            ],
-            'exames_diagnosticos' => [
-                'exames' => $paciente['exames'],
-                'resultados' => $paciente['resultados'],
-                'diagnosticos' => $paciente['diagnosticos']
-            ],
-            'estilo_vida' => [
-                'habitos_alimentares' => $paciente['habitos_alimentares'],
-                'atividade_fisica' => $paciente['atividade_fisica'],
-                'alcool' => $paciente['alcool'],
-                'tabaco' => $paciente['tabaco']
-            ],
-            'notas_plano_tratamento' => [
-                'notas' => $paciente['notas'],
-                'plano_tratamento' => $paciente['plano_tratamento'],
-                'proximas_consultas' => $paciente['proximas_consultas'],
-                'consentimento' => $paciente['consentimento']
-            ]
-        ];
-
-        return $dadosPaciente;
-    }
-
 }
