@@ -97,7 +97,7 @@ class ApiCallerUtil
               } else {
                   $data = [
                       'status' => 'ERROR',
-                      'message' => "NÃO FOI POSSÍVEL GERAR A AVALIAÇÃO PARA O PACIENTE (" . $pacienteId . ")",
+                      'message' => "NÃO FOI POSSÍVEL GERAR A AVALIAÇÃO PARA O PACIENTE (" . $dadosPaciente['nome'] . ")",
                   ];
               }
           }
