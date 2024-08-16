@@ -33,7 +33,7 @@ class PacienteModel extends Model
         'sexo'
     ];
 
-    public function getPacienteJSON($id)
+    public function getPacienteData($id)
     {
         $paciente = $this->find($id);
 

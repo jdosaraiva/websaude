@@ -32,6 +32,8 @@ $routes->get('gemini/generate/(:num)', 'GeminiController::generateText/$1');
 $routes->get('gemini/view/(:num)', 'GeminiController::viewEvaluation/$1');
 
 $routes->get('/call-maritaca/(:num)', 'ApiController::callMaritaca/$1');
+$routes->get('maritaca/view/(:num)', 'ApiController::viewEvaluation/$1');
+
 
 $routes->get('teste-env', function() {
     echo getenv('GEMINI_API_KEY');
